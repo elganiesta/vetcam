@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:getwidget/getwidget.dart';
 
 class Workshops extends StatelessWidget {
   const Workshops({Key? key}) : super(key: key);
@@ -12,7 +13,7 @@ class Workshops extends StatelessWidget {
             Image.asset(
               "assets/images/vetcam.png",
               width: 500,
-              height: 200,
+              height: 300,
             ),
             const SizedBox(
               height: 20,
@@ -20,19 +21,20 @@ class Workshops extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Workshop(
-                  name: 'Alpha',
-                  onTap: () {
-                    Navigator.pushNamed(context, '/test');
-                  },
+                GFButton(
+                    size: GFSize.LARGE,
+                    onPressed: (){},
+                    text:"Alpha"
                 ),
-                Workshop(
-                  name: 'Tensyland',
-                  onTap: () {},
+                GFButton(
+                    size: GFSize.LARGE,
+                    onPressed: (){},
+                    text:"Tensyland"
                 ),
-                Workshop(
-                  name: 'NovaBloc',
-                  onTap: () {},
+                GFButton(
+                    size: GFSize.LARGE,
+                    onPressed: (){},
+                    text:"NovaBloc"
                 ),
               ],
             ),
@@ -43,37 +45,4 @@ class Workshops extends StatelessWidget {
   }
 }
 
-class Workshop extends StatelessWidget {
 
-  const Workshop({
-    Key? key, required this.onTap, required this.name,
-  }) : super(key: key);
-
-  final void Function() onTap;
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 5.0,
-          horizontal: 25.0,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(5.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              offset: const Offset(0, 6),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: Text(name),
-      ),
-    );
-  }
-}
