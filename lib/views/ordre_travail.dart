@@ -256,45 +256,45 @@ class _OrdreTravailState extends State<OrdreTravail> {
                           const Text("CONCEPTION MECANIQUE"),
                           Radio(
                             value: "REPARATION",
-                            groupValue: _uniteSelected,
+                            groupValue: _travailSelected,
                             onChanged: (String? value) {
                               setState(() {
-                                _uniteSelected = value as String;
+                                _travailSelected = value as String;
                               });
                             },
                           ),
                           const Text("REPARATION"),
                           Radio(
                             value: "REGLAGE",
-                            groupValue: _uniteSelected,
+                            groupValue: _travailSelected,
                             onChanged: (String? value) {
                               setState(() {
-                                _uniteSelected = value as String;
+                                _travailSelected = value as String;
                               });
                             },
                           ),
                           const Text("REGLAGE"),
                           Radio(
                             value: "MAINTENANCE PREVENTIVE",
-                            groupValue: _uniteSelected,
+                            groupValue: _travailSelected,
                             onChanged: (String? value) {
                               setState(() {
-                                _uniteSelected = value as String;
+                                _travailSelected = value as String;
                               });
                             },
                           ),
                           const Text("MAINTENANCE PREVENTIVE"),
                           Radio(
                             value: "AUTRE",
-                            groupValue: _uniteSelected,
+                            groupValue: _travailSelected,
                             onChanged: (String? value) {
                               setState(() {
-                                _uniteSelected = value as String;
+                                _travailSelected = value as String;
                               });
                             },
                           ),
                           const Text("AUTRE"),
-                          if (_uniteSelected == "AUTRE")
+                          if (_travailSelected == "AUTRE")
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 12.0),
                               child: TextField(
