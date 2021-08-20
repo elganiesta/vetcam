@@ -42,7 +42,7 @@ class Services extends StatelessWidget {
                       size: GFSize.LARGE,
                       color: GFColors.PRIMARY,
                       onPressed: () {
-                        Navigator.pushNamed(context, '/OrdreTravail');
+                        Navigator.pushNamed(context, '/OrdresTravail');
                       },
                       text: service,
                     );

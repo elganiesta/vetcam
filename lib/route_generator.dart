@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'views/ordre_travail.dart';
+import 'views/gestion_ordres_travail/ordre_travail.dart';
+import 'views/gestion_ordres_travail/ordres_travail.dart';
 import 'views/sections.dart';
 import 'views/services.dart';
 import 'views/splash.dart';
@@ -19,6 +20,8 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const Sections());
       case '/Services':
         return MaterialPageRoute(builder: (_) => const Services());
+      case '/OrdresTravail':
+        return MaterialPageRoute(builder: (_) => const OrdresTravail());
       case '/OrdreTravail':
         return MaterialPageRoute(builder: (_) => const OrdreTravail());
       default:
