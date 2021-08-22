@@ -1,8 +1,11 @@
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:getwidget/colors/gf_color.dart';
 import 'package:getwidget/components/button/gf_button.dart';
+import 'package:vetcam/controllers/ordres_travail_controller.dart';
+import 'package:vetcam/models/ordre_travail_model.dart';
 
 class OrdreTravail extends StatefulWidget {
   const OrdreTravail({Key? key}) : super(key: key);
@@ -24,6 +27,34 @@ class _OrdreTravailState extends State<OrdreTravail> {
     false
   ];
 
+  late TextEditingController _debutController;
+  late TextEditingController _finController;
+  late TextEditingController _demandeurController;
+
+  @override
+  void initState() {
+    _debutController = TextEditingController(text: DateTime.now().toString());
+    _finController = TextEditingController(text: DateTime.now().toString());
+    _demandeurController = TextEditingController(text: "____");
+    super.initState();
+  }
+
+  // String calculateDuree() {
+  //   DateTime _dateTimeDebut = DateTime.now();
+  //   DateTime _dateTimeFin = DateTime.now();
+  //   if (_dateDebut != "" && _heureDebut != "") {
+  //     _dateTimeDebut =
+  //         DateTime.tryParse('$_dateDebut $_heureDebut') as DateTime;
+  //   }
+  //   if (_dateFin != "" && _heureFin != "") {
+  //     _dateTimeFin = DateTime.tryParse('$_dateFin $_heureFin') as DateTime;
+  //   }
+  //   print(_dateTimeDebut);
+  //   print(_dateTimeFin);
+  //   print(_dateTimeFin.difference(_dateTimeDebut));
+  //   return "Not yet";
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,6 +69,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              //Header of the screen
               Table(
                 border: TableBorder.all(
                   color: Colors.black,
@@ -65,19 +97,18 @@ class _OrdreTravailState extends State<OrdreTravail> {
               const SizedBox(
                 height: 20,
               ),
+              // Date, time, demandeur, n ordre
               Table(
                 border: TableBorder.all(
                   color: Colors.black,
                   width: 1,
                 ),
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: const [
+                children: [
                   TableRow(
                     children: [
-                      CellTitle(text: 'DATE DEBUT'),
-                      CellTitle(text: 'HEURE DEBUT'),
-                      CellTitle(text: 'DATE FIN'),
-                      CellTitle(text: 'HEURE FIN'),
+                      CellTitle(text: 'DEBUT'),
+                      CellTitle(text: 'FIN'),
                       CellTitle(text: 'DUREE'),
                       CellTitle(text: 'DEMANDEUR'),
                       CellTitle(text: 'N° ORDRE'),
@@ -86,38 +117,41 @@ class _OrdreTravailState extends State<OrdreTravail> {
                   TableRow(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: TextField(
-                          decoration: InputDecoration(hintText: 'dd-MM-yyyy'),
+                        padding: EdgeInsets.all(12.0),
+                        child: DateTimePicker(
+                          type: DateTimePickerType.dateTimeSeparate,
+                          dateMask: 'd MMM, yyyy',
+                          initialValue: DateTime.now().toString(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                          icon: Icon(Icons.timelapse),
+                          controller: _debutController,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: DateTimePicker(
+                          type: DateTimePickerType.dateTimeSeparate,
+                          initialValue: DateTime.now().toString(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                          icon: Icon(Icons.event),
+                          dateLabelText: 'Date',
+                          timeLabelText: "Hour",
+                          controller: _finController,
                         ),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: TextField(
-                          decoration: InputDecoration(hintText: 'HH:mm:ss'),
-                        ),
+                        child: Text("Mazal"),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
                         child: TextField(
-                          decoration: InputDecoration(hintText: 'dd-MM-yyyy'),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: TextField(
-                          decoration: InputDecoration(hintText: 'HH:mm:ss'),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text('Durée calculé'),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: TextField(
-                          decoration:
-                              InputDecoration(hintText: 'Nom et prénom'),
+                          decoration: InputDecoration(
+                            hintText: 'Nom et prénom',
+                          ),
+                          controller: _demandeurController,
                         ),
                       ),
                       Padding(
@@ -128,6 +162,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
                   ),
                 ],
               ),
+              // Unite
               Table(
                 border: TableBorder.all(
                   color: Colors.black,
@@ -230,6 +265,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
                   ),
                 ],
               ),
+              // Type du travail
               Table(
                 border: TableBorder.all(
                   color: Colors.black,
@@ -307,6 +343,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
                   ),
                 ],
               ),
+              // Travail demande
               Table(
                 border: TableBorder.all(
                   color: Colors.black,
@@ -333,122 +370,125 @@ class _OrdreTravailState extends State<OrdreTravail> {
                   ),
                 ],
               ),
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: [
-                  const TableRow(
-                    children: [
-                      CellTitle(text: 'LISTE DES INTERVENANTS'),
-                    ],
-                  ),
-                  TableRow(
-                    children: [
-                      FractionallySizedBox(
-                        widthFactor: 1 / 5,
-                        child: GFButton(
-                          text: "Ajouter",
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return Dialog(
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 12.0),
-                                          child: FractionallySizedBox(
-                                            widthFactor: 0.4,
-                                            child: TextField(
-                                              decoration: InputDecoration(
-                                                  hintText: 'Nom'),
-                                            ),
-                                          ),
-                                        ),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 12.0),
-                                          child: FractionallySizedBox(
-                                            widthFactor: 0.4,
-                                            child: TextField(
-                                              decoration: InputDecoration(
-                                                  hintText: 'Fonction'),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Wrap(
-                                          children: [
-                                            GFButton(
-                                              text: "Enregistrer",
-                                              color: GFColors.SUCCESS,
-                                              onPressed: () {},
-                                            ),
-                                            const SizedBox(
-                                              width: 20,
-                                            ),
-                                            GFButton(
-                                              text: "Annuler",
-                                              color: GFColors.DANGER,
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: const [
-                  TableRow(
-                    children: [
-                      CellTitle(text: 'NOM'),
-                      CellTitle(text: 'FONCTION'),
-                      CellTitle(text: 'VISA'),
-                    ],
-                  ),
-                  TableRow(
-                    children: [
-                      Center(
-                        child: Text(
-                          "Nom prenom",
-                        ),
-                      ),
-                      Center(
-                        child: Text(
-                          "Fonction",
-                        ),
-                      ),
-                      Center(
-                        child: Text(
-                          "Signature",
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              // LISTE DES INTERVENANTS
+              // Table(
+              //   border: TableBorder.all(
+              //     color: Colors.black,
+              //   ),
+              //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              //   children: [
+              //     const TableRow(
+              //       children: [
+              //         CellTitle(text: 'LISTE DES INTERVENANTS'),
+              //       ],
+              //     ),
+              //     TableRow(
+              //       children: [
+              //         FractionallySizedBox(
+              //           widthFactor: 1 / 5,
+              //           child: GFButton(
+              //             text: "Ajouter",
+              //             onPressed: () {
+              //               showDialog(
+              //                 context: context,
+              //                 builder: (context) {
+              //                   return Dialog(
+              //                     child: SingleChildScrollView(
+              //                       child: Column(
+              //                         children: [
+              //                           const Padding(
+              //                             padding: EdgeInsets.symmetric(
+              //                                 horizontal: 12.0),
+              //                             child: FractionallySizedBox(
+              //                               widthFactor: 0.4,
+              //                               child: TextField(
+              //                                 decoration: InputDecoration(
+              //                                     hintText: 'Nom'),
+              //                               ),
+              //                             ),
+              //                           ),
+              //                           const Padding(
+              //                             padding: EdgeInsets.symmetric(
+              //                                 horizontal: 12.0),
+              //                             child: FractionallySizedBox(
+              //                               widthFactor: 0.4,
+              //                               child: TextField(
+              //                                 decoration: InputDecoration(
+              //                                     hintText: 'Fonction'),
+              //                               ),
+              //                             ),
+              //                           ),
+              //                           const SizedBox(
+              //                             height: 20,
+              //                           ),
+              //                           Wrap(
+              //                             children: [
+              //                               GFButton(
+              //                                 text: "Enregistrer",
+              //                                 color: GFColors.SUCCESS,
+              //                                 onPressed: () {},
+              //                               ),
+              //                               const SizedBox(
+              //                                 width: 20,
+              //                               ),
+              //                               GFButton(
+              //                                 text: "Annuler",
+              //                                 color: GFColors.DANGER,
+              //                                 onPressed: () {
+              //                                   Navigator.pop(context);
+              //                                 },
+              //                               ),
+              //                             ],
+              //                           ),
+              //                         ],
+              //                       ),
+              //                     ),
+              //                   );
+              //                 },
+              //               );
+              //             },
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ],
+              // ),
+              // add to LISTE DES INTERVENANTS
+              // Table(
+              //   border: TableBorder.all(
+              //     color: Colors.black,
+              //   ),
+              //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              //   children: const [
+              //     TableRow(
+              //       children: [
+              //         CellTitle(text: 'NOM'),
+              //         CellTitle(text: 'FONCTION'),
+              //         CellTitle(text: 'VISA'),
+              //       ],
+              //     ),
+              //     TableRow(
+              //       children: [
+              //         Center(
+              //           child: Text(
+              //             "Nom prenom",
+              //           ),
+              //         ),
+              //         Center(
+              //           child: Text(
+              //             "Fonction",
+              //           ),
+              //         ),
+              //         Center(
+              //           child: Text(
+              //             "Signature",
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ],
+              // ),
+              // PIECES JOINTES
               Table(
                 border: TableBorder.all(
                   color: Colors.black,
@@ -547,6 +587,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
               const SizedBox(
                 height: 20,
               ),
+              // Commentaire
               Column(
                 children: const [
                   Text(
@@ -568,6 +609,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
               const SizedBox(
                 height: 40,
               ),
+              // Actions
               Wrap(
                 children: [
                   FractionallySizedBox(
@@ -576,6 +618,12 @@ class _OrdreTravailState extends State<OrdreTravail> {
                       color: GFColors.SUCCESS,
                       text: "Sauvegarder",
                       onPressed: () {
+                        final ordre = OrdreTravailModel()
+                          ..id = "5"
+                          ..dateTimeDebut = _debutController.text
+                          ..dateTimeFin = _finController.text
+                          ..demandeur = _demandeurController.text;
+                        addOrdreTravail(ordre);
                         Navigator.pop(context);
                       },
                     ),

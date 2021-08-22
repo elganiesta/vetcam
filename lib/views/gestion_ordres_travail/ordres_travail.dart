@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:getwidget/components/badge/gf_badge.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:vetcam/views/gestion_ordres_travail/ordre_travail.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vetcam/boxes.dart';
+import 'package:vetcam/models/ordre_travail_model.dart';
 
-class OrdresTravail extends StatelessWidget {
+class OrdresTravail extends StatefulWidget {
   const OrdresTravail({Key? key}) : super(key: key);
+
+  @override
+  _OrdresTravailState createState() => _OrdresTravailState();
+}
+
+class _OrdresTravailState extends State<OrdresTravail> {
+  final List<OrdreTravailModel> ordres = [];
+
+  @override
+  void dispose() {
+    Hive.box('ordresTravail').close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         automaticallyImplyLeading: true,
-        foregroundColor: Colors.black,
+        backgroundColor: GFColors.DARK,
         title: const Text("Ordres du travail"),
       ),
       body: SingleChildScrollView(
@@ -35,98 +48,80 @@ class OrdresTravail extends StatelessWidget {
               const SizedBox(
                 height: 20,
               ),
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                columnWidths: const {
-                  0: FixedColumnWidth(100),
-                  2: FixedColumnWidth(150),
-                  5: FixedColumnWidth(300),
+              ValueListenableBuilder(
+                valueListenable: Boxes.getOrdres().listenable(),
+                builder: (BuildContext context, Box<OrdreTravailModel> box, _) {
+                  final ordres = box.values.toList().cast<OrdreTravailModel>();
+                  return OrdresTable(ordres: ordres);
                 },
-                children: [
-                  TableRow(
-                    children: [
-                      CellTitle(text: "N°"),
-                      CellTitle(text: "ACTIONS"),
-                      CellTitle(text: "STATUS"),
-                      CellTitle(text: "DEMANDEUR"),
-                      CellTitle(text: "UNITE"),
-                      CellTitle(text: "TYPE DU TRAVAIL"),
-                      CellTitle(text: "DATE DEBUT"),
-                      CellTitle(text: "DATE FIN"),
-                    ],
-                  ),
-                  TableRow(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text("5"),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Wrap(
-                          children: [],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: GFBadge(
-                          size: GFSize.MEDIUM,
-                          text: "Completed",
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text("Flan"),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text("Alpha"),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Wrap(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Chip(
-                                label: Text("REPARATION"),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Chip(
-                                label: Text("REGLAGE"),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Chip(
-                                label: Text("AUTRE"),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text("19-08-2021"),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text("20-08-2021"),
-                      ),
-                    ],
-                  ),
-                ],
-              )
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class OrdresTable extends StatelessWidget {
+  const OrdresTable({
+    Key? key,
+    required this.ordres,
+  }) : super(key: key);
+
+  final List<OrdreTravailModel> ordres;
+
+  @override
+  Widget build(BuildContext context) {
+    return DataTable(
+      headingRowColor: MaterialStateColor.resolveWith(
+          (states) => Colors.blueGrey[100] as Color),
+      headingTextStyle:
+          const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+      columns: [
+        DataColumn(label: Text('N° ORDER')),
+        DataColumn(label: Text('ACTIONS')),
+        DataColumn(label: Text('STATUS')),
+        DataColumn(label: Text('DEMANDEUR')),
+        DataColumn(label: Text('UNITE')),
+        DataColumn(label: Text('DATE DEBUT')),
+        DataColumn(label: Text('DATE FIN')),
+      ],
+      rows: ordres
+          .map(
+            (ordre) {
+              return DataRow(
+                cells: <DataCell>[
+                  DataCell(Text(ordre.id)),
+                  DataCell(Container(
+                    child: Row(
+                      children: [
+                        GFIconButton(
+                          color: GFColors.INFO,
+                          size: GFSize.SMALL,
+                          icon: Icon(Icons.edit),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  )),
+                  DataCell(SizedBox(
+                    width: 100,
+                    child: GFBadge(
+                      text: "En cours",
+                      size: GFSize.MEDIUM,
+                    ),
+                  )),
+                  DataCell(Text(ordre.demandeur)),
+                  DataCell(Text("Unite")),
+                  DataCell(Text(ordre.dateTimeDebut)),
+                  DataCell(Text(ordre.dateTimeFin)),
+                ],
+              );
+            },
+          )
+          .toList()
+          .cast<DataRow>(),
     );
   }
 }

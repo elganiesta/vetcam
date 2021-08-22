@@ -25,7 +25,7 @@ class RouteGenerator {
       case '/OrdreTravail':
         return MaterialPageRoute(builder: (_) => const OrdreTravail());
       default:
-        return MaterialPageRoute(builder: (_) => const Splash());
+        return MaterialPageRoute(builder: (_) => const OrdresTravail());
     }
   }
 }

@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:vetcam/models/ordre_travail_model.dart';
 import 'package:vetcam/notifiers/workshops_notifier.dart';
 import 'route_generator.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+
+  Hive.registerAdapter(OrdreTravailAdapter());
+  await Hive.openBox<OrdreTravailModel>('ordresTravail');
+
   runApp(const MyApp());
 }
 
@@ -23,7 +31,7 @@ class MyApp extends StatelessWidget {
         ),
         onGenerateRoute: RouteGenerator.generateRoute,
         debugShowCheckedModeBanner: false,
-        initialRoute: '/Splash',
+        initialRoute: '/OrdresTravail',
       ),
     );
   }
