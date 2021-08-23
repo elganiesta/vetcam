@@ -19,6 +19,7 @@ dependencies:
   provider: ^5.0.0
   getwidget: ^2.0.3
   date_time_picker: ^2.1.0
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:

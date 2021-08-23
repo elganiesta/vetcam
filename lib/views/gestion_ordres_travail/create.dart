@@ -7,6 +7,8 @@ import 'package:getwidget/components/button/gf_button.dart';
 import 'package:vetcam/controllers/ordres_travail_controller.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
+import '../../const.dart';
+
 class OrdreTravail extends StatefulWidget {
   const OrdreTravail({Key? key}) : super(key: key);
 
@@ -30,30 +32,26 @@ class _OrdreTravailState extends State<OrdreTravail> {
   late TextEditingController _debutController;
   late TextEditingController _finController;
   late TextEditingController _demandeurController;
+  String _duree = "";
 
   @override
   void initState() {
     _debutController = TextEditingController(text: DateTime.now().toString());
-    _finController = TextEditingController(text: DateTime.now().toString());
-    _demandeurController = TextEditingController(text: "____");
+    _finController = TextEditingController(text: '');
+    _demandeurController = TextEditingController(text: "");
+    calculateDuree();
     super.initState();
   }
 
-  // String calculateDuree() {
-  //   DateTime _dateTimeDebut = DateTime.now();
-  //   DateTime _dateTimeFin = DateTime.now();
-  //   if (_dateDebut != "" && _heureDebut != "") {
-  //     _dateTimeDebut =
-  //         DateTime.tryParse('$_dateDebut $_heureDebut') as DateTime;
-  //   }
-  //   if (_dateFin != "" && _heureFin != "") {
-  //     _dateTimeFin = DateTime.tryParse('$_dateFin $_heureFin') as DateTime;
-  //   }
-  //   print(_dateTimeDebut);
-  //   print(_dateTimeFin);
-  //   print(_dateTimeFin.difference(_dateTimeDebut));
-  //   return "Not yet";
-  // }
+  void calculateDuree() {
+    if (_finController.text != "") {
+      DateTime _dateTimeDebut = DateTime.parse(_debutController.text);
+      DateTime _dateTimeFin = DateTime.parse(_finController.text);
+      setState(() {
+        _duree = (_dateTimeFin.difference(_dateTimeDebut)).toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,31 +117,34 @@ class _OrdreTravailState extends State<OrdreTravail> {
                       Padding(
                         padding: EdgeInsets.all(12.0),
                         child: DateTimePicker(
-                          type: DateTimePickerType.dateTimeSeparate,
-                          dateMask: 'd MMM, yyyy',
-                          initialValue: DateTime.now().toString(),
+                          type: DateTimePickerType.dateTime,
+                          dateMask: 'd/MM/yyyy HH:mm',
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2100),
-                          icon: Icon(Icons.timelapse),
+                          icon: Icon(Icons.event),
+                          dateLabelText: 'Date',
+                          timeLabelText: "Hour",
                           controller: _debutController,
+                          onChanged: (val) => calculateDuree(),
                         ),
                       ),
                       Padding(
                         padding: EdgeInsets.all(12.0),
                         child: DateTimePicker(
-                          type: DateTimePickerType.dateTimeSeparate,
-                          initialValue: DateTime.now().toString(),
+                          type: DateTimePickerType.dateTime,
+                          dateMask: 'd/MM/yyyy HH:mm',
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2100),
                           icon: Icon(Icons.event),
                           dateLabelText: 'Date',
                           timeLabelText: "Hour",
                           controller: _finController,
+                          onChanged: (val) => calculateDuree(),
                         ),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text("Mazal"),
+                        child: Text(_duree),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
@@ -620,8 +621,8 @@ class _OrdreTravailState extends State<OrdreTravail> {
                       onPressed: () {
                         final ordre = OrdreTravailModel()
                           ..id = "5"
-                          ..dateTimeDebut = _debutController.text
-                          ..dateTimeFin = _finController.text
+                          ..dateTimeDebut = convertToDateTime(_debutController.text)
+                          ..dateTimeFin = convertToDateTime(_finController.text)
                           ..demandeur = _demandeurController.text;
                         addOrdreTravail(ordre);
                         Navigator.pop(context);
