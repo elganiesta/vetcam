@@ -6,7 +6,7 @@ part of 'ordre_travail_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class OrdreTravailAdapter extends TypeAdapter<OrdreTravailModel> {
+class OrdreTravailModelAdapter extends TypeAdapter<OrdreTravailModel> {
   @override
   final int typeId = 0;
 
@@ -20,13 +20,19 @@ class OrdreTravailAdapter extends TypeAdapter<OrdreTravailModel> {
       ..id = fields[0] as String
       ..dateTimeDebut = fields[1] as String
       ..dateTimeFin = fields[2] as String
-      ..demandeur = fields[3] as String;
+      ..demandeur = fields[3] as String
+      ..unite = fields[4] as String
+      ..types = (fields[5] as List).cast<dynamic>()
+      ..travail = fields[6] as String
+      ..pieces = (fields[7] as List).cast<dynamic>()
+      ..commentaire = fields[8] as String
+      ..status = fields[9] as String;
   }
 
   @override
   void write(BinaryWriter writer, OrdreTravailModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -34,7 +40,19 @@ class OrdreTravailAdapter extends TypeAdapter<OrdreTravailModel> {
       ..writeByte(2)
       ..write(obj.dateTimeFin)
       ..writeByte(3)
-      ..write(obj.demandeur);
+      ..write(obj.demandeur)
+      ..writeByte(4)
+      ..write(obj.unite)
+      ..writeByte(5)
+      ..write(obj.types)
+      ..writeByte(6)
+      ..write(obj.travail)
+      ..writeByte(7)
+      ..write(obj.pieces)
+      ..writeByte(8)
+      ..write(obj.commentaire)
+      ..writeByte(9)
+      ..write(obj.status);
   }
 
   @override
@@ -43,7 +61,7 @@ class OrdreTravailAdapter extends TypeAdapter<OrdreTravailModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is OrdreTravailAdapter &&
+      other is OrdreTravailModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

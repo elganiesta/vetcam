@@ -15,4 +15,22 @@ class OrdreTravailModel extends HiveObject {
 
   @HiveField(3)
   late String demandeur;
+
+  @HiveField(4)
+  late String unite;
+
+  @HiveField(5)
+  late List types;
+
+  @HiveField(6)
+  late String travail;
+
+  @HiveField(7)
+  late List pieces;
+
+  @HiveField(8)
+  late String commentaire;
+
+  @HiveField(9)
+  late String status;
 }

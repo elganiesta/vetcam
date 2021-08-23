@@ -9,9 +9,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  Hive.registerAdapter(OrdreTravailAdapter());
+  Hive.registerAdapter(OrdreTravailModelAdapter());
+  await Hive.deleteBoxFromDisk('ordresTravail');
   await Hive.openBox<OrdreTravailModel>('ordresTravail');
-
+  await Hive.openBox<Map<String, dynamic>>('ids');
   runApp(const MyApp());
 }
 

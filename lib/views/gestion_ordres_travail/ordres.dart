@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:getwidget/colors/gf_color.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -97,10 +98,45 @@ class OrdresTable extends StatelessWidget {
                     child: Row(
                       children: [
                         GFIconButton(
+                          tooltip: "Imprimer",
+                          color: GFColors.DARK,
+                          size: GFSize.SMALL,
+                          icon: Icon(Icons.print),
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 5,),
+                        GFIconButton(
+                          tooltip: "Modifier",
                           color: GFColors.INFO,
                           size: GFSize.SMALL,
                           icon: Icon(Icons.edit),
                           onPressed: () {},
+                        ),
+                        const SizedBox(width: 5,),
+                        GFIconButton(
+                          tooltip: "Pause",
+                          color: GFColors.WARNING,
+                          size: GFSize.SMALL,
+                          icon: Icon(Icons.pause),
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 5,),
+                        GFIconButton(
+                          tooltip: "Continuer",
+                          color: GFColors.SUCCESS,
+                          size: GFSize.SMALL,
+                          icon: Icon(Icons.play_arrow),
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 5,),
+                        GFIconButton(
+                          tooltip: "Supprimer",
+                          color: GFColors.DANGER,
+                          size: GFSize.SMALL,
+                          icon: Icon(Icons.delete),
+                          onPressed: () async {
+                            await ordre.delete();
+                          },
                         ),
                       ],
                     ),
@@ -110,10 +146,11 @@ class OrdresTable extends StatelessWidget {
                     child: GFBadge(
                       text: "En cours",
                       size: GFSize.MEDIUM,
+                      color: GFColors.SUCCESS,
                     ),
                   )),
                   DataCell(Text(ordre.demandeur)),
-                  DataCell(Text("Unite")),
+                  DataCell(Text(ordre.unite)),
                   DataCell(Text(ordre.dateTimeDebut)),
                   DataCell(Text(ordre.dateTimeFin)),
                 ],

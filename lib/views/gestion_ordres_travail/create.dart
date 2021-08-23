@@ -5,6 +5,7 @@ import 'package:flutter/painting.dart';
 import 'package:getwidget/colors/gf_color.dart';
 import 'package:getwidget/components/button/gf_button.dart';
 import 'package:vetcam/controllers/ordres_travail_controller.dart';
+import 'package:vetcam/models/option_model.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
 import '../../const.dart';
@@ -17,29 +18,39 @@ class OrdreTravail extends StatefulWidget {
 }
 
 class _OrdreTravailState extends State<OrdreTravail> {
-  String _uniteSelected = 'ALPHA';
-  List<bool> _travailSelected = [false, false, false, false, false];
-  List<bool> _piecesSelected = [
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ];
+  final _formKey = GlobalKey<FormState>();
+
+  late List<OptionItem> _unites;
+  late List<OptionItem> _types;
+  late List<OptionItem> _pieces;
 
   late TextEditingController _debutController;
   late TextEditingController _finController;
   late TextEditingController _demandeurController;
+  late TextEditingController _travailController;
+  late TextEditingController _commentaireController;
   String _duree = "";
+  String _ordreId = "";
 
   @override
   void initState() {
+    _unites =
+        unites.map((unite) => OptionItem(unite)).toList().cast<OptionItem>();
+    _pieces =
+        pieces.map((piece) => OptionItem(piece)).toList().cast<OptionItem>();
+    _types = typesTravail
+        .map((type) => OptionItem(type))
+        .toList()
+        .cast<OptionItem>();
+
     _debutController = TextEditingController(text: DateTime.now().toString());
     _finController = TextEditingController(text: '');
     _demandeurController = TextEditingController(text: "");
+    _travailController = TextEditingController(text: "");
+    _commentaireController = TextEditingController(text: "");
+    _ordreId = getLastId().toString();
     calculateDuree();
+
     super.initState();
   }
 
@@ -51,6 +62,44 @@ class _OrdreTravailState extends State<OrdreTravail> {
         _duree = (_dateTimeFin.difference(_dateTimeDebut)).toString();
       });
     }
+  }
+
+  bool checkBoxValid() {
+    bool _pieceIsValid = _pieces
+        .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
+        .isSelected;
+    bool _typeIsValid = _types
+        .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
+        .isSelected;
+    bool _uniteIsValid = _unites
+        .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
+        .isSelected;
+    if (_pieceIsValid && _typeIsValid && _uniteIsValid) return true;
+    return false;
+  }
+
+  Future<void> ajouterOrdre() async {
+    List _typesList = _types.map((e) {
+      if (e.isSelected == true) return e.name;
+    }).toList();
+    _typesList.removeWhere((e) => e == null);
+    List _piecesList = _pieces.map((e) {
+      if (e.isSelected == true) return e.name;
+    }).toList();
+    _piecesList.removeWhere((e) => e == null);
+    final ordre = OrdreTravailModel()
+      ..id = _ordreId
+      ..status = "En Cours"
+      ..dateTimeDebut = convertToDateTime(_debutController.text)
+      ..dateTimeFin = convertToDateTime(_finController.text)
+      ..demandeur = _demandeurController.text
+      ..unite = _unites.firstWhere((unite) => unite.isSelected == true).name
+      ..travail = _commentaireController.text
+      ..types = _typesList
+      ..pieces = _piecesList
+      ..commentaire = _commentaireController.text;
+    await addOrdreTravail(ordre);
+    await updateLastOrderId(int.parse(_ordreId));
   }
 
   @override
@@ -65,584 +114,492 @@ class _OrdreTravailState extends State<OrdreTravail> {
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              //Header of the screen
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                  width: 2,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                //Header of the screen
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                    width: 2,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      children: [
+                        Image.asset(
+                          "assets/images/vetcam.png",
+                          height: 100,
+                        ),
+                        const Center(
+                          child: Text(
+                            "ORDRE DU TRAVAIL",
+                            style: TextStyle(
+                                fontSize: 28, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: [
-                  TableRow(
-                    children: [
-                      Image.asset(
-                        "assets/images/vetcam.png",
-                        height: 100,
-                      ),
-                      const Center(
-                        child: Text(
-                          "ORDRE DU TRAVAIL",
-                          style: TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              // Date, time, demandeur, n ordre
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                  width: 1,
+                const SizedBox(
+                  height: 20,
                 ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: [
-                  TableRow(
-                    children: [
-                      CellTitle(text: 'DEBUT'),
-                      CellTitle(text: 'FIN'),
-                      CellTitle(text: 'DUREE'),
-                      CellTitle(text: 'DEMANDEUR'),
-                      CellTitle(text: 'N° ORDRE'),
-                    ],
+                // Date, time, demandeur, n ordre
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                    width: 1,
                   ),
-                  TableRow(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: DateTimePicker(
-                          type: DateTimePickerType.dateTime,
-                          dateMask: 'd/MM/yyyy HH:mm',
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                          icon: Icon(Icons.event),
-                          dateLabelText: 'Date',
-                          timeLabelText: "Hour",
-                          controller: _debutController,
-                          onChanged: (val) => calculateDuree(),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      children: [
+                        CellTitle(text: 'DEBUT'),
+                        CellTitle(text: 'FIN'),
+                        CellTitle(text: 'DUREE'),
+                        CellTitle(text: 'DEMANDEUR'),
+                        CellTitle(text: 'N° ORDRE'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: DateTimePicker(
+                            type: DateTimePickerType.dateTime,
+                            dateMask: 'd/MM/yyyy HH:mm',
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                            icon: Icon(Icons.event),
+                            dateLabelText: 'Date',
+                            timeLabelText: "Hour",
+                            controller: _debutController,
+                            onChanged: (val) => calculateDuree(),
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: DateTimePicker(
-                          type: DateTimePickerType.dateTime,
-                          dateMask: 'd/MM/yyyy HH:mm',
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                          icon: Icon(Icons.event),
-                          dateLabelText: 'Date',
-                          timeLabelText: "Hour",
-                          controller: _finController,
-                          onChanged: (val) => calculateDuree(),
+                        Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: DateTimePicker(
+                            type: DateTimePickerType.dateTime,
+                            dateMask: 'd/MM/yyyy HH:mm',
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                            icon: Icon(Icons.event),
+                            dateLabelText: 'Date',
+                            timeLabelText: "Hour",
+                            controller: _finController,
+                            onChanged: (val) => calculateDuree(),
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text(_duree),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Nom et prénom',
-                          ),
-                          controller: _demandeurController,
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Text(_duree),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text('14'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Unite
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: [
-                  const TableRow(
-                    children: [
-                      CellTitle(text: 'UNITE BENIFICIARE'),
-                    ],
-                  ),
-                  TableRow(
-                    children: [
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Radio(
-                            value: "ALPHA",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("ALPHA"),
-                          Radio(
-                            value: "TENSYLAND",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("TENSYLAND"),
-                          Radio(
-                            value: "POLISSAGE",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("POLISSAGE"),
-                          Radio(
-                            value: "P. ENROBEE",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("P. ENROBEE"),
-                          Radio(
-                            value: "MOBILIER URBAIN",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("MOBILIER URBAIN"),
-                          Radio(
-                            value: "BPE",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("BPE"),
-                          Radio(
-                            value: "AUTRE",
-                            groupValue: _uniteSelected,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _uniteSelected = value as String;
-                              });
-                            },
-                          ),
-                          const Text("AUTRE"),
-                          if (_uniteSelected == "AUTRE")
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Tapez ici..',
-                                ),
-                              ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              hintText: 'Nom et prénom',
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Type du travail
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: [
-                  const TableRow(
-                    children: [
-                      CellTitle(text: 'TYPE DU TRAVAIL'),
-                    ],
-                  ),
-                  TableRow(
-                    children: [
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Checkbox(
-                            value: _travailSelected[0],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _travailSelected[0] = value as bool;
-                              });
+                            controller: _demandeurController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter some text';
+                              }
+                              return null;
                             },
-                          ),
-                          const Text("CONCEPTION MECANIQUE"),
-                          Checkbox(
-                            value: _travailSelected[1],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _travailSelected[1] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("REPARATION"),
-                          Checkbox(
-                            value: _travailSelected[2],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _travailSelected[2] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("REGLAGE"),
-                          Checkbox(
-                            value: _travailSelected[3],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _travailSelected[3] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("MAINTENANCE PREVENTIVE"),
-                          Checkbox(
-                            value: _travailSelected[4],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _travailSelected[4] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("AUTRE"),
-                          if (_travailSelected[4] == true)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Tapez ici..',
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Travail demande
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
-                ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: const [
-                  TableRow(
-                    children: [
-                      CellTitle(text: 'TRAVAIL DEMANDE'),
-                    ],
-                  ),
-                  TableRow(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: TextField(
-                          maxLines: 5,
-                          decoration: InputDecoration(
-                            hintText: 'Tapez ici..',
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // LISTE DES INTERVENANTS
-              // Table(
-              //   border: TableBorder.all(
-              //     color: Colors.black,
-              //   ),
-              //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              //   children: [
-              //     const TableRow(
-              //       children: [
-              //         CellTitle(text: 'LISTE DES INTERVENANTS'),
-              //       ],
-              //     ),
-              //     TableRow(
-              //       children: [
-              //         FractionallySizedBox(
-              //           widthFactor: 1 / 5,
-              //           child: GFButton(
-              //             text: "Ajouter",
-              //             onPressed: () {
-              //               showDialog(
-              //                 context: context,
-              //                 builder: (context) {
-              //                   return Dialog(
-              //                     child: SingleChildScrollView(
-              //                       child: Column(
-              //                         children: [
-              //                           const Padding(
-              //                             padding: EdgeInsets.symmetric(
-              //                                 horizontal: 12.0),
-              //                             child: FractionallySizedBox(
-              //                               widthFactor: 0.4,
-              //                               child: TextField(
-              //                                 decoration: InputDecoration(
-              //                                     hintText: 'Nom'),
-              //                               ),
-              //                             ),
-              //                           ),
-              //                           const Padding(
-              //                             padding: EdgeInsets.symmetric(
-              //                                 horizontal: 12.0),
-              //                             child: FractionallySizedBox(
-              //                               widthFactor: 0.4,
-              //                               child: TextField(
-              //                                 decoration: InputDecoration(
-              //                                     hintText: 'Fonction'),
-              //                               ),
-              //                             ),
-              //                           ),
-              //                           const SizedBox(
-              //                             height: 20,
-              //                           ),
-              //                           Wrap(
-              //                             children: [
-              //                               GFButton(
-              //                                 text: "Enregistrer",
-              //                                 color: GFColors.SUCCESS,
-              //                                 onPressed: () {},
-              //                               ),
-              //                               const SizedBox(
-              //                                 width: 20,
-              //                               ),
-              //                               GFButton(
-              //                                 text: "Annuler",
-              //                                 color: GFColors.DANGER,
-              //                                 onPressed: () {
-              //                                   Navigator.pop(context);
-              //                                 },
-              //                               ),
-              //                             ],
-              //                           ),
-              //                         ],
-              //                       ),
-              //                     ),
-              //                   );
-              //                 },
-              //               );
-              //             },
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ],
-              // ),
-              // add to LISTE DES INTERVENANTS
-              // Table(
-              //   border: TableBorder.all(
-              //     color: Colors.black,
-              //   ),
-              //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              //   children: const [
-              //     TableRow(
-              //       children: [
-              //         CellTitle(text: 'NOM'),
-              //         CellTitle(text: 'FONCTION'),
-              //         CellTitle(text: 'VISA'),
-              //       ],
-              //     ),
-              //     TableRow(
-              //       children: [
-              //         Center(
-              //           child: Text(
-              //             "Nom prenom",
-              //           ),
-              //         ),
-              //         Center(
-              //           child: Text(
-              //             "Fonction",
-              //           ),
-              //         ),
-              //         Center(
-              //           child: Text(
-              //             "Signature",
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ],
-              // ),
-              // PIECES JOINTES
-              Table(
-                border: TableBorder.all(
-                  color: Colors.black,
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Text(_ordreId),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                children: [
-                  const TableRow(
-                    children: [
-                      CellTitle(text: 'PIECES JOINTES'),
-                    ],
+                // Unite
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
                   ),
-                  TableRow(
-                    children: [
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Checkbox(
-                            value: _piecesSelected[0],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[0] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("RAPPORT D'INTERVENTION"),
-                          Checkbox(
-                            value: _piecesSelected[1],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[1] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("FACTURE"),
-                          Checkbox(
-                            value: _piecesSelected[2],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[2] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("DEVIS"),
-                          Checkbox(
-                            value: _piecesSelected[3],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[3] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("DESSIN"),
-                          Checkbox(
-                            value: _piecesSelected[4],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[4] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("SCHEMA"),
-                          Checkbox(
-                            value: _piecesSelected[5],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[5] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("FICHE TECHNIQUE"),
-                          Checkbox(
-                            value: _piecesSelected[6],
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _piecesSelected[6] = value as bool;
-                              });
-                            },
-                          ),
-                          const Text("AUTRE"),
-                          if (_piecesSelected[6] == true)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Tapez ici..',
-                                ),
-                              ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    const TableRow(
+                      children: [
+                        CellTitle(text: 'UNITE BENIFICIARE'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: _unites
+                              .map((OptionItem unite) {
+                                return Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Checkbox(
+                                      value: unite.isSelected,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _unites.forEach((unite) {
+                                            unite.isSelected = false;
+                                          });
+                                          unite.isSelected = value as bool;
+                                        });
+                                      },
+                                    ),
+                                    Text(unite.name),
+                                    if (unite.name == "AUTRE" &&
+                                        unite.isSelected)
+                                      Container(
+                                        width: 250,
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 12.0),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              hintText: 'Tapez ici..',
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              })
+                              .toList()
+                              .cast<Widget>(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // Type du travail
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    const TableRow(
+                      children: [
+                        CellTitle(text: 'TYPE DU TRAVAIL'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: _types
+                              .map((type) {
+                                return Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Checkbox(
+                                      value: type.isSelected,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          type.isSelected = value as bool;
+                                        });
+                                      },
+                                    ),
+                                    Text(type.name),
+                                    if (type.name == "AUTRE" && type.isSelected)
+                                      Container(
+                                        width: 250,
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 12.0),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              hintText: 'Tapez ici..',
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              })
+                              .toList()
+                              .cast<Widget>(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // Travail demande
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      children: [
+                        CellTitle(text: 'TRAVAIL DEMANDE'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: TextFormField(
+                            maxLines: 5,
+                            controller: _travailController,
+                            decoration: InputDecoration(
+                              hintText: 'Tapez ici..',
                             ),
-                        ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter some text';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // LISTE DES INTERVENANTS
+                // Table(
+                //   border: TableBorder.all(
+                //     color: Colors.black,
+                //   ),
+                //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                //   children: [
+                //     const TableRow(
+                //       children: [
+                //         CellTitle(text: 'LISTE DES INTERVENANTS'),
+                //       ],
+                //     ),
+                //     TableRow(
+                //       children: [
+                //         FractionallySizedBox(
+                //           widthFactor: 1 / 5,
+                //           child: GFButton(
+                //             text: "Ajouter",
+                //             onPressed: () {
+                //               showDialog(
+                //                 context: context,
+                //                 builder: (context) {
+                //                   return Dialog(
+                //                     child: SingleChildScrollView(
+                //                       child: Column(
+                //                         children: [
+                //                           const Padding(
+                //                             padding: EdgeInsets.symmetric(
+                //                                 horizontal: 12.0),
+                //                             child: FractionallySizedBox(
+                //                               widthFactor: 0.4,
+                //                               child: TextField(
+                //                                 decoration: InputDecoration(
+                //                                     hintText: 'Nom'),
+                //                               ),
+                //                             ),
+                //                           ),
+                //                           const Padding(
+                //                             padding: EdgeInsets.symmetric(
+                //                                 horizontal: 12.0),
+                //                             child: FractionallySizedBox(
+                //                               widthFactor: 0.4,
+                //                               child: TextField(
+                //                                 decoration: InputDecoration(
+                //                                     hintText: 'Fonction'),
+                //                               ),
+                //                             ),
+                //                           ),
+                //                           const SizedBox(
+                //                             height: 20,
+                //                           ),
+                //                           Wrap(
+                //                             children: [
+                //                               GFButton(
+                //                                 text: "Enregistrer",
+                //                                 color: GFColors.SUCCESS,
+                //                                 onPressed: () {},
+                //                               ),
+                //                               const SizedBox(
+                //                                 width: 20,
+                //                               ),
+                //                               GFButton(
+                //                                 text: "Annuler",
+                //                                 color: GFColors.DANGER,
+                //                                 onPressed: () {
+                //                                   Navigator.pop(context);
+                //                                 },
+                //                               ),
+                //                             ],
+                //                           ),
+                //                         ],
+                //                       ),
+                //                     ),
+                //                   );
+                //                 },
+                //               );
+                //             },
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ],
+                // ),
+                // add to LISTE DES INTERVENANTS
+                // Table(
+                //   border: TableBorder.all(
+                //     color: Colors.black,
+                //   ),
+                //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                //   children: const [
+                //     TableRow(
+                //       children: [
+                //         CellTitle(text: 'NOM'),
+                //         CellTitle(text: 'FONCTION'),
+                //         CellTitle(text: 'VISA'),
+                //       ],
+                //     ),
+                //     TableRow(
+                //       children: [
+                //         Center(
+                //           child: Text(
+                //             "Nom prenom",
+                //           ),
+                //         ),
+                //         Center(
+                //           child: Text(
+                //             "Fonction",
+                //           ),
+                //         ),
+                //         Center(
+                //           child: Text(
+                //             "Signature",
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ],
+                // ),
+                // PIECES JOINTES
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    const TableRow(
+                      children: [
+                        CellTitle(text: 'PIECES JOINTES'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: _pieces
+                              .map((OptionItem piece) {
+                                return Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Checkbox(
+                                      value: piece.isSelected,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          piece.isSelected = value as bool;
+                                        });
+                                      },
+                                    ),
+                                    Text(piece.name),
+                                    if (piece.name == "AUTRE" &&
+                                        piece.isSelected)
+                                      Container(
+                                        width: 250,
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 12.0),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              hintText: 'Tapez ici..',
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              })
+                              .toList()
+                              .cast<Widget>(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                // Commentaire
+                Column(
+                  children: [
+                    Text(
+                      'Commentaire :',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              // Commentaire
-              Column(
-                children: const [
-                  Text(
-                    'Commentaire :',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Tapez ici..',
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
+                      child: TextField(
+                        controller: _commentaireController,
+                        decoration: InputDecoration(
+                          hintText: 'Tapez ici..',
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              // Actions
-              Wrap(
-                children: [
-                  FractionallySizedBox(
-                    widthFactor: 1 / 6,
-                    child: GFButton(
-                      color: GFColors.SUCCESS,
-                      text: "Sauvegarder",
-                      onPressed: () {
-                        final ordre = OrdreTravailModel()
-                          ..id = "5"
-                          ..dateTimeDebut = convertToDateTime(_debutController.text)
-                          ..dateTimeFin = convertToDateTime(_finController.text)
-                          ..demandeur = _demandeurController.text;
-                        addOrdreTravail(ordre);
-                        Navigator.pop(context);
-                      },
+                  ],
+                ),
+                const SizedBox(
+                  height: 40,
+                ),
+                // Actions
+                Wrap(
+                  children: [
+                    FractionallySizedBox(
+                      widthFactor: 1 / 6,
+                      child: GFButton(
+                        color: GFColors.SECONDARY,
+                        text: "Sauvegarder",
+                        onPressed: () async {
+                          if (!_formKey.currentState!.validate()) {
+                          } else if (!checkBoxValid()) {
+                            showMessage(context,
+                                "[UNITE, PIECES, TYPES] Please check at least one option.");
+                          } else {
+                            await ajouterOrdre();
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    width: 50,
-                  ),
-                  FractionallySizedBox(
-                    widthFactor: 1 / 6,
-                    child: GFButton(
-                      color: GFColors.DARK,
-                      text: "Imprimer",
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                    // const SizedBox(
+                    //   width: 50,
+                    // ),
+                    // FractionallySizedBox(
+                    //   widthFactor: 1 / 6,
+                    //   child: GFButton(
+                    //     color: GFColors.DARK,
+                    //     text: "Imprimer",
+                    //     onPressed: () {},
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
