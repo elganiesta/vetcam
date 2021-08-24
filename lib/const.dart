@@ -42,6 +42,17 @@ String convertToDateTime(String dateTime) {
   return "";
 }
 
+String regularDateTime(String dateTime) {
+  final DateFormat displayFormater = DateFormat('d/M/y HH:mm');
+  final DateFormat serverFormater = DateFormat('yyyy-MM-d HH:mm:ss.S');
+  if(dateTime != "") {
+    final DateTime displayDate = displayFormater.parse(dateTime);
+    final String formatted = serverFormater.format(displayDate);
+    return formatted;
+  }
+  return "";
+}
+
 showMessage(context, message) {
   return ScaffoldMessenger.of(context).showSnackBar(
     new SnackBar(

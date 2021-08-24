@@ -42,7 +42,7 @@ class _OrdresTravailState extends State<OrdresTravail> {
                   GFButton(
                     text: "Ajouter un ordre",
                     onPressed: () {
-                      Navigator.pushNamed(context, '/OrdreTravail');
+                      Navigator.pushNamed(context, '/CreateOrdreTravail');
                     },
                   ),
                 ],
@@ -107,6 +107,7 @@ class OrdresTable extends StatelessWidget {
       rows: ordres
           .map(
             (ordre) {
+              bool _isCompleted = getStatus(ordre)['text'] == "COMPLETED";
               return DataRow(
                 cells: <DataCell>[
                   DataCell(Text(ordre.id)),
@@ -124,50 +125,62 @@ class OrdresTable extends StatelessWidget {
                           width: 5,
                         ),
                         GFIconButton(
-                          tooltip: "Modifier",
+                          tooltip: "Details",
                           color: GFColors.INFO,
                           size: GFSize.SMALL,
-                          icon: Icon(Icons.edit),
-                          onPressed: () {},
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        GFIconButton(
-                          tooltip: "Pause",
-                          color: GFColors.WARNING,
-                          size: GFSize.SMALL,
-                          icon: Icon(Icons.pause),
-                          onPressed: () async {
-                            ordre..status = "PAUSE";
-                            await ordre.save();
+                          icon: Icon(Icons.remove_red_eye),
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/EditOrdreTravail',
+                              arguments: ordre,
+                            );
                           },
                         ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        GFIconButton(
-                          tooltip: "Continuer",
-                          color: GFColors.SUCCESS,
-                          size: GFSize.SMALL,
-                          icon: Icon(Icons.play_arrow),
-                          onPressed: () async {
-                            ordre..status = "EN COURS";
-                            await ordre.save();
-                          },
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        GFIconButton(
-                          tooltip: "Supprimer",
-                          color: GFColors.DANGER,
-                          size: GFSize.SMALL,
-                          icon: Icon(Icons.delete),
-                          onPressed: () async {
-                            await ordre.delete();
-                          },
-                        ),
+                        if (!_isCompleted)
+                          const SizedBox(
+                            width: 5,
+                          ),
+                        if (!_isCompleted)
+                          GFIconButton(
+                            tooltip: "Pause",
+                            color: GFColors.WARNING,
+                            size: GFSize.SMALL,
+                            icon: Icon(Icons.pause),
+                            onPressed: () async {
+                              ordre..status = "PAUSE";
+                              await ordre.save();
+                            },
+                          ),
+                        if (!_isCompleted)
+                          const SizedBox(
+                            width: 5,
+                          ),
+                        if (!_isCompleted)
+                          GFIconButton(
+                            tooltip: "Continuer",
+                            color: GFColors.SUCCESS,
+                            size: GFSize.SMALL,
+                            icon: Icon(Icons.play_arrow),
+                            onPressed: () async {
+                              ordre..status = "EN COURS";
+                              await ordre.save();
+                            },
+                          ),
+                        if (!_isCompleted)
+                          const SizedBox(
+                            width: 5,
+                          ),
+                        if (!_isCompleted)
+                          GFIconButton(
+                            tooltip: "Supprimer",
+                            color: GFColors.DANGER,
+                            size: GFSize.SMALL,
+                            icon: Icon(Icons.delete),
+                            onPressed: () async {
+                              await ordre.delete();
+                            },
+                          ),
                       ],
                     ),
                   )),

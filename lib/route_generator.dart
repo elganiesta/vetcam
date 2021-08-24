@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'models/ordre_travail_model.dart';
 import 'views/gestion_ordres_travail/create.dart';
+import 'views/gestion_ordres_travail/edit.dart';
 import 'views/gestion_ordres_travail/ordres.dart';
 import 'views/sections.dart';
 import 'views/services.dart';
@@ -10,7 +12,7 @@ import 'views/workshops.dart';
 class RouteGenerator {
   // ignore: missing_return
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    // final args = settings.arguments;
+    final args = settings.arguments;
     switch (settings.name) {
       case '/Splash':
         return MaterialPageRoute(builder: (_) => const Splash());
@@ -22,8 +24,13 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const Services());
       case '/OrdresTravail':
         return MaterialPageRoute(builder: (_) => const OrdresTravail());
-      case '/OrdreTravail':
-        return MaterialPageRoute(builder: (_) => const OrdreTravail());
+      case '/CreateOrdreTravail':
+        return MaterialPageRoute(builder: (_) => CreateOrdreTravail());
+      case '/EditOrdreTravail':
+        return MaterialPageRoute(
+            builder: (_) => EditOrdreTravail(
+                  ordre: args as OrdreTravailModel,
+                ));
       default:
         return MaterialPageRoute(builder: (_) => const OrdresTravail());
     }

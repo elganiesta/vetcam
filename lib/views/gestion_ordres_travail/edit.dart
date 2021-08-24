@@ -4,20 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:getwidget/colors/gf_color.dart';
 import 'package:getwidget/components/button/gf_button.dart';
-import 'package:vetcam/controllers/ordres_travail_controller.dart';
 import 'package:vetcam/models/option_model.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
 import '../../const.dart';
 
-class CreateOrdreTravail extends StatefulWidget {
-  const CreateOrdreTravail({Key? key}) : super(key: key);
+class EditOrdreTravail extends StatefulWidget {
+  const EditOrdreTravail({Key? key, required this.ordre}) : super(key: key);
+
+  final OrdreTravailModel ordre;
 
   @override
-  State<CreateOrdreTravail> createState() => _CreateOrdreTravailState();
+  State<EditOrdreTravail> createState() => _EditOrdreTravailState();
 }
 
-class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
+class _EditOrdreTravailState extends State<EditOrdreTravail> {
   final _formKey = GlobalKey<FormState>();
 
   late List<OptionItem> _unites;
@@ -30,25 +31,49 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
   late TextEditingController _travailController;
   late TextEditingController _commentaireController;
   String _duree = "";
-  String _ordreId = "";
+
+  late OrdreTravailModel _ordre;
+  bool modifiable = false;
 
   @override
   void initState() {
-    _unites =
-        unites.map((unite) => OptionItem(unite)).toList().cast<OptionItem>();
-    _pieces =
-        pieces.map((piece) => OptionItem(piece)).toList().cast<OptionItem>();
-    _types = typesTravail
-        .map((type) => OptionItem(type))
+    _ordre = widget.ordre;
+
+    _unites = unites
+        .map((unite) {
+          var option = OptionItem(unite);
+          if (_ordre.unite == option.name) option.isSelected = true;
+          return option;
+        })
         .toList()
         .cast<OptionItem>();
-
-    _debutController = TextEditingController(text: DateTime.now().toString());
-    _finController = TextEditingController(text: '');
-    _demandeurController = TextEditingController(text: "");
-    _travailController = TextEditingController(text: "");
-    _commentaireController = TextEditingController(text: "");
-    _ordreId = getLastId().toString();
+    _pieces = pieces
+        .map((piece) {
+          var option = OptionItem(piece);
+          var result = _ordre.pieces
+              .firstWhere((e) => e == option.name, orElse: () => null);
+          if (result != null) option.isSelected = true;
+          return option;
+        })
+        .toList()
+        .cast<OptionItem>();
+    _types = typesTravail
+        .map((type) {
+          var option = OptionItem(type);
+          var result = _ordre.types
+              .firstWhere((e) => e == option.name, orElse: () => null);
+          if (result != null) option.isSelected = true;
+          return option;
+        })
+        .toList()
+        .cast<OptionItem>();
+    _debutController =
+        TextEditingController(text: regularDateTime(_ordre.dateTimeDebut));
+    _finController =
+        TextEditingController(text: regularDateTime(_ordre.dateTimeFin));
+    _demandeurController = TextEditingController(text: _ordre.demandeur);
+    _travailController = TextEditingController(text: _ordre.travail);
+    _commentaireController = TextEditingController(text: _ordre.commentaire);
     calculateDuree();
 
     super.initState();
@@ -87,19 +112,16 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
       if (e.isSelected == true) return e.name;
     }).toList();
     _piecesList.removeWhere((e) => e == null);
-    final ordre = OrdreTravailModel()
-      ..id = _ordreId
-      ..status = "EN COURS"
+    _ordre
       ..dateTimeDebut = convertToDateTime(_debutController.text)
       ..dateTimeFin = convertToDateTime(_finController.text)
       ..demandeur = _demandeurController.text
       ..unite = _unites.firstWhere((unite) => unite.isSelected == true).name
-      ..travail = _travailController.text
+      ..travail = _commentaireController.text
       ..types = _typesList
       ..pieces = _piecesList
       ..commentaire = _commentaireController.text;
-    await addOrdreTravail(ordre);
-    await updateLastOrderId(int.parse(_ordreId));
+    await _ordre.save();
   }
 
   @override
@@ -177,6 +199,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                             timeLabelText: "Hour",
                             controller: _debutController,
                             onChanged: (val) => calculateDuree(),
+                            enabled: modifiable,
                           ),
                         ),
                         Padding(
@@ -191,6 +214,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                             timeLabelText: "Hour",
                             controller: _finController,
                             onChanged: (val) => calculateDuree(),
+                            enabled: modifiable,
                           ),
                         ),
                         Padding(
@@ -200,6 +224,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12.0),
                           child: TextFormField(
+                            enabled: modifiable,
                             decoration: InputDecoration(
                               hintText: 'Nom et prénom',
                             ),
@@ -214,7 +239,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Text(_ordreId),
+                          child: Text(_ordre.id),
                         ),
                       ],
                     ),
@@ -245,12 +270,14 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                     Checkbox(
                                       value: unite.isSelected,
                                       onChanged: (bool? value) {
-                                        setState(() {
-                                          _unites.forEach((unite) {
-                                            unite.isSelected = false;
+                                        if (modifiable) {
+                                          setState(() {
+                                            _unites.forEach((unite) {
+                                              unite.isSelected = false;
+                                            });
+                                            unite.isSelected = value as bool;
                                           });
-                                          unite.isSelected = value as bool;
-                                        });
+                                        }
                                       },
                                     ),
                                     Text(unite.name),
@@ -258,10 +285,11 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                         unite.isSelected)
                                       Container(
                                         width: 250,
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 12.0),
                                           child: TextField(
+                                            enabled: modifiable,
                                             decoration: InputDecoration(
                                               hintText: 'Tapez ici..',
                                             ),
@@ -303,19 +331,22 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                     Checkbox(
                                       value: type.isSelected,
                                       onChanged: (bool? value) {
-                                        setState(() {
-                                          type.isSelected = value as bool;
-                                        });
+                                        if (modifiable) {
+                                          setState(() {
+                                            type.isSelected = value as bool;
+                                          });
+                                        }
                                       },
                                     ),
                                     Text(type.name),
                                     if (type.name == "AUTRE" && type.isSelected)
                                       Container(
                                         width: 250,
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 12.0),
                                           child: TextField(
+                                            enabled: modifiable,
                                             decoration: InputDecoration(
                                               hintText: 'Tapez ici..',
                                             ),
@@ -349,6 +380,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         Padding(
                           padding: EdgeInsets.all(12.0),
                           child: TextFormField(
+                            enabled: modifiable,
                             maxLines: 5,
                             controller: _travailController,
                             decoration: InputDecoration(
@@ -509,9 +541,11 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                     Checkbox(
                                       value: piece.isSelected,
                                       onChanged: (bool? value) {
-                                        setState(() {
-                                          piece.isSelected = value as bool;
-                                        });
+                                        if (modifiable) {
+                                          setState(() {
+                                            piece.isSelected = value as bool;
+                                          });
+                                        }
                                       },
                                     ),
                                     Text(piece.name),
@@ -519,10 +553,11 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                         piece.isSelected)
                                       Container(
                                         width: 250,
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 12.0),
                                           child: TextField(
+                                            enabled: modifiable,
                                             decoration: InputDecoration(
                                               hintText: 'Tapez ici..',
                                             ),
@@ -554,6 +589,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12.0),
                       child: TextField(
+                        enabled: modifiable,
                         controller: _commentaireController,
                         decoration: InputDecoration(
                           hintText: 'Tapez ici..',
@@ -571,16 +607,22 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                     FractionallySizedBox(
                       widthFactor: 1 / 6,
                       child: GFButton(
-                        color: GFColors.SECONDARY,
-                        text: "Sauvegarder",
+                        color: modifiable ? GFColors.SECONDARY : GFColors.DANGER,
+                        text: modifiable ? "Sauvegarder" : "Modifier",
                         onPressed: () async {
-                          if (!_formKey.currentState!.validate()) {
-                          } else if (!checkBoxValid()) {
-                            showMessage(context,
-                                "[UNITE, PIECES, TYPES] Please check at least one option.");
+                          if (modifiable) {
+                            if (!_formKey.currentState!.validate()) {
+                            } else if (!checkBoxValid()) {
+                              showMessage(context,
+                                  "[UNITE, PIECES, TYPES] Please check at least one option.");
+                            } else {
+                              await ajouterOrdre();
+                              Navigator.pop(context);
+                            }
                           } else {
-                            await ajouterOrdre();
-                            Navigator.pop(context);
+                            setState(() {
+                              modifiable = true;
+                            });
                           }
                         },
                       ),

@@ -10,7 +10,6 @@ void main() async {
   await Hive.initFlutter();
 
   Hive.registerAdapter(OrdreTravailModelAdapter());
-  // await Hive.deleteBoxFromDisk('ordresTravail');
   await Hive.openBox<OrdreTravailModel>('ordresTravail');
   await Hive.openBox<Map<String, dynamic>>('ids');
   runApp(const MyApp());
