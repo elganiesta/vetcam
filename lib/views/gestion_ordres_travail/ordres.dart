@@ -6,6 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vetcam/boxes.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
+import 'imprimer.dart';
+
 class OrdresTravail extends StatefulWidget {
   const OrdresTravail({Key? key}) : super(key: key);
 
@@ -119,7 +121,15 @@ class OrdresTable extends StatelessWidget {
                           color: GFColors.DARK,
                           size: GFSize.SMALL,
                           icon: Icon(Icons.print),
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    PreviewOrdreTravail(ordre: ordre,),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(
                           width: 5,
