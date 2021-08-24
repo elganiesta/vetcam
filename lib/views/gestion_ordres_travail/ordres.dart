@@ -19,6 +19,7 @@ class _OrdresTravailState extends State<OrdresTravail> {
   @override
   void dispose() {
     Hive.box('ordresTravail').close();
+    Hive.box('ids').close();
     super.dispose();
   }
 
@@ -72,6 +73,21 @@ class OrdresTable extends StatelessWidget {
 
   final List<OrdreTravailModel> ordres;
 
+  Map getStatus(OrdreTravailModel ordre) {
+    Color color = GFColors.SUCCESS;
+    String text = ordre.status;
+    if (ordre.status == "PAUSE") {
+      color = GFColors.WARNING;
+    } else if (ordre.dateTimeFin != "") {
+      text = "COMPLETED";
+      color = GFColors.DANGER;
+    }
+    return {
+      'color': color,
+      'text': text,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return DataTable(
@@ -104,7 +120,9 @@ class OrdresTable extends StatelessWidget {
                           icon: Icon(Icons.print),
                           onPressed: () {},
                         ),
-                        const SizedBox(width: 5,),
+                        const SizedBox(
+                          width: 5,
+                        ),
                         GFIconButton(
                           tooltip: "Modifier",
                           color: GFColors.INFO,
@@ -112,23 +130,35 @@ class OrdresTable extends StatelessWidget {
                           icon: Icon(Icons.edit),
                           onPressed: () {},
                         ),
-                        const SizedBox(width: 5,),
+                        const SizedBox(
+                          width: 5,
+                        ),
                         GFIconButton(
                           tooltip: "Pause",
                           color: GFColors.WARNING,
                           size: GFSize.SMALL,
                           icon: Icon(Icons.pause),
-                          onPressed: () {},
+                          onPressed: () async {
+                            ordre..status = "PAUSE";
+                            await ordre.save();
+                          },
                         ),
-                        const SizedBox(width: 5,),
+                        const SizedBox(
+                          width: 5,
+                        ),
                         GFIconButton(
                           tooltip: "Continuer",
                           color: GFColors.SUCCESS,
                           size: GFSize.SMALL,
                           icon: Icon(Icons.play_arrow),
-                          onPressed: () {},
+                          onPressed: () async {
+                            ordre..status = "EN COURS";
+                            await ordre.save();
+                          },
                         ),
-                        const SizedBox(width: 5,),
+                        const SizedBox(
+                          width: 5,
+                        ),
                         GFIconButton(
                           tooltip: "Supprimer",
                           color: GFColors.DANGER,
@@ -144,9 +174,9 @@ class OrdresTable extends StatelessWidget {
                   DataCell(SizedBox(
                     width: 100,
                     child: GFBadge(
-                      text: "En cours",
+                      text: getStatus(ordre)['text'],
                       size: GFSize.MEDIUM,
-                      color: GFColors.SUCCESS,
+                      color: getStatus(ordre)['color'],
                     ),
                   )),
                   DataCell(Text(ordre.demandeur)),

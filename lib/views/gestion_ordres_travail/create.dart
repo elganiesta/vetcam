@@ -89,7 +89,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
     _piecesList.removeWhere((e) => e == null);
     final ordre = OrdreTravailModel()
       ..id = _ordreId
-      ..status = "En Cours"
+      ..status = "EN COURS"
       ..dateTimeDebut = convertToDateTime(_debutController.text)
       ..dateTimeFin = convertToDateTime(_finController.text)
       ..demandeur = _demandeurController.text
@@ -184,7 +184,7 @@ class _OrdreTravailState extends State<OrdreTravail> {
                           child: DateTimePicker(
                             type: DateTimePickerType.dateTime,
                             dateMask: 'd/MM/yyyy HH:mm',
-                            firstDate: DateTime(2000),
+                            firstDate: DateTime.parse(_debutController.text),
                             lastDate: DateTime(2100),
                             icon: Icon(Icons.event),
                             dateLabelText: 'Date',
