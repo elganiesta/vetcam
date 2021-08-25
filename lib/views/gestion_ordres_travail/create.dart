@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:getwidget/colors/gf_color.dart';
 import 'package:getwidget/components/button/gf_button.dart';
+import 'package:getwidget/getwidget.dart';
+import 'package:vetcam/boxes.dart';
 import 'package:vetcam/controllers/ordres_travail_controller.dart';
+import 'package:vetcam/models/intervenant_model.dart';
 import 'package:vetcam/models/option_model.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../const.dart';
 
@@ -32,6 +36,8 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
   String _duree = "";
   String _ordreId = "";
 
+  late IntervenantModel _intervenantSelected;
+
   @override
   void initState() {
     _unites =
@@ -48,7 +54,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
     _demandeurController = TextEditingController(text: "");
     _travailController = TextEditingController(text: "");
     _commentaireController = TextEditingController(text: "");
-    _ordreId = getLastId().toString();
+    _ordreId = getLastOrdreId().toString();
     calculateDuree();
 
     super.initState();
@@ -99,7 +105,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
       ..pieces = _piecesList
       ..commentaire = _commentaireController.text;
     await addOrdreTravail(ordre);
-    await updateLastOrderId(int.parse(_ordreId));
+    await updateLastOrdreId(int.parse(_ordreId));
   }
 
   @override
@@ -367,123 +373,144 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                   ],
                 ),
                 // LISTE DES INTERVENANTS
-                // Table(
-                //   border: TableBorder.all(
-                //     color: Colors.black,
-                //   ),
-                //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                //   children: [
-                //     const TableRow(
-                //       children: [
-                //         CellTitle(text: 'LISTE DES INTERVENANTS'),
-                //       ],
-                //     ),
-                //     TableRow(
-                //       children: [
-                //         FractionallySizedBox(
-                //           widthFactor: 1 / 5,
-                //           child: GFButton(
-                //             text: "Ajouter",
-                //             onPressed: () {
-                //               showDialog(
-                //                 context: context,
-                //                 builder: (context) {
-                //                   return Dialog(
-                //                     child: SingleChildScrollView(
-                //                       child: Column(
-                //                         children: [
-                //                           const Padding(
-                //                             padding: EdgeInsets.symmetric(
-                //                                 horizontal: 12.0),
-                //                             child: FractionallySizedBox(
-                //                               widthFactor: 0.4,
-                //                               child: TextField(
-                //                                 decoration: InputDecoration(
-                //                                     hintText: 'Nom'),
-                //                               ),
-                //                             ),
-                //                           ),
-                //                           const Padding(
-                //                             padding: EdgeInsets.symmetric(
-                //                                 horizontal: 12.0),
-                //                             child: FractionallySizedBox(
-                //                               widthFactor: 0.4,
-                //                               child: TextField(
-                //                                 decoration: InputDecoration(
-                //                                     hintText: 'Fonction'),
-                //                               ),
-                //                             ),
-                //                           ),
-                //                           const SizedBox(
-                //                             height: 20,
-                //                           ),
-                //                           Wrap(
-                //                             children: [
-                //                               GFButton(
-                //                                 text: "Enregistrer",
-                //                                 color: GFColors.SUCCESS,
-                //                                 onPressed: () {},
-                //                               ),
-                //                               const SizedBox(
-                //                                 width: 20,
-                //                               ),
-                //                               GFButton(
-                //                                 text: "Annuler",
-                //                                 color: GFColors.DANGER,
-                //                                 onPressed: () {
-                //                                   Navigator.pop(context);
-                //                                 },
-                //                               ),
-                //                             ],
-                //                           ),
-                //                         ],
-                //                       ),
-                //                     ),
-                //                   );
-                //                 },
-                //               );
-                //             },
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ],
-                // ),
-                // add to LISTE DES INTERVENANTS
-                // Table(
-                //   border: TableBorder.all(
-                //     color: Colors.black,
-                //   ),
-                //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                //   children: const [
-                //     TableRow(
-                //       children: [
-                //         CellTitle(text: 'NOM'),
-                //         CellTitle(text: 'FONCTION'),
-                //         CellTitle(text: 'VISA'),
-                //       ],
-                //     ),
-                //     TableRow(
-                //       children: [
-                //         Center(
-                //           child: Text(
-                //             "Nom prenom",
-                //           ),
-                //         ),
-                //         Center(
-                //           child: Text(
-                //             "Fonction",
-                //           ),
-                //         ),
-                //         Center(
-                //           child: Text(
-                //             "Signature",
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ],
-                // ),
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    const TableRow(
+                      children: [
+                        CellTitle(text: 'LISTE DES INTERVENANTS'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        FractionallySizedBox(
+                          widthFactor: 1 / 5,
+                          child: GFButton(
+                            text: "Ajouter",
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return Dialog(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          ValueListenableBuilder(
+                                            valueListenable:
+                                                Boxes.getIntervenants()
+                                                    .listenable(),
+                                            builder: (BuildContext context,
+                                                Box<IntervenantModel> box, _) {
+                                              final intervenants = box.values
+                                                  .toList()
+                                                  .cast<IntervenantModel>();
+                                              if (intervenants.length == 0) {
+                                                return Text(
+                                                    'Vous avez 0 intervenants dans database');
+                                              } else {
+                                                return DropdownButton(
+                                                  items: intervenants
+                                                      .map(
+                                                        (intervenant) =>
+                                                            DropdownMenuItem<
+                                                                IntervenantModel>(
+                                                          child: Text(
+                                                            intervenant.nom,
+                                                          ),
+                                                          value: intervenant,
+                                                        ),
+                                                      )
+                                                      .toList()
+                                                      .cast<
+                                                          DropdownMenuItem<
+                                                              IntervenantModel>>(),
+                                                  value: _intervenantSelected,
+                                                  onChanged: (dynamic val) {
+                                                    setState(() {
+                                                      _intervenantSelected =
+                                                          val;
+                                                    });
+                                                  },
+                                                );
+                                              }
+                                            },
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Wrap(
+                                            children: [
+                                              GFButton(
+                                                text: "Enregistrer",
+                                                color: GFColors.SUCCESS,
+                                                onPressed: () {},
+                                              ),
+                                              const SizedBox(
+                                                width: 20,
+                                              ),
+                                              GFButton(
+                                                text: "Annuler",
+                                                color: GFColors.DANGER,
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                //add to LISTE DES INTERVENANTS
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: const [
+                    TableRow(
+                      children: [
+                        CellTitle(text: 'NOM'),
+                        CellTitle(text: 'FONCTION'),
+                        CellTitle(text: 'VISA'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Center(
+                          child: Text(
+                            "Nom prenom",
+                          ),
+                        ),
+                        Center(
+                          child: Text(
+                            "Fonction",
+                          ),
+                        ),
+                        Center(
+                          child: Text(
+                            "Signature",
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 // PIECES JOINTES
                 Table(
                   border: TableBorder.all(

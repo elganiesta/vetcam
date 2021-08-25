@@ -4,6 +4,7 @@ import 'package:getwidget/getwidget.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vetcam/boxes.dart';
+import 'package:vetcam/const.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
 import 'imprimer.dart';
@@ -16,7 +17,7 @@ class OrdresTravail extends StatefulWidget {
 }
 
 class _OrdresTravailState extends State<OrdresTravail> {
-  final List<OrdreTravailModel> ordres = [];
+  String _status = "EN COURS";
 
   @override
   void dispose() {
@@ -24,56 +25,6 @@ class _OrdresTravailState extends State<OrdresTravail> {
     Hive.box('ids').close();
     super.dispose();
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        backgroundColor: GFColors.DARK,
-        title: const Text("Ordres du travail"),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GFButton(
-                    text: "Ajouter un ordre",
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/CreateOrdreTravail');
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              ValueListenableBuilder(
-                valueListenable: Boxes.getOrdres().listenable(),
-                builder: (BuildContext context, Box<OrdreTravailModel> box, _) {
-                  final ordres = box.values.toList().cast<OrdreTravailModel>();
-                  return OrdresTable(ordres: ordres);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class OrdresTable extends StatelessWidget {
-  const OrdresTable({
-    Key? key,
-    required this.ordres,
-  }) : super(key: key);
-
-  final List<OrdreTravailModel> ordres;
 
   Map getStatus(OrdreTravailModel ordre) {
     Color color = GFColors.SUCCESS;
@@ -92,126 +43,221 @@ class OrdresTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DataTable(
-      headingRowColor: MaterialStateColor.resolveWith(
-          (states) => Colors.blueGrey[100] as Color),
-      headingTextStyle:
-          const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-      columns: [
-        DataColumn(label: Text('N° ORDER')),
-        DataColumn(label: Text('ACTIONS')),
-        DataColumn(label: Text('STATUS')),
-        DataColumn(label: Text('DEMANDEUR')),
-        DataColumn(label: Text('UNITE')),
-        DataColumn(label: Text('DATE DEBUT')),
-        DataColumn(label: Text('DATE FIN')),
-      ],
-      rows: ordres
-          .map(
-            (ordre) {
-              bool _isCompleted = getStatus(ordre)['text'] == "COMPLETED";
-              return DataRow(
-                cells: <DataCell>[
-                  DataCell(Text(ordre.id)),
-                  DataCell(Container(
-                    child: Row(
-                      children: [
-                        GFIconButton(
-                          tooltip: "Imprimer",
-                          color: GFColors.DARK,
-                          size: GFSize.SMALL,
-                          icon: Icon(Icons.print),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PreviewOrdreTravail(ordre: ordre,),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        GFIconButton(
-                          tooltip: "Details",
-                          color: GFColors.INFO,
-                          size: GFSize.SMALL,
-                          icon: Icon(Icons.remove_red_eye),
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/EditOrdreTravail',
-                              arguments: ordre,
-                            );
-                          },
-                        ),
-                        if (!_isCompleted)
-                          const SizedBox(
-                            width: 5,
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        backgroundColor: GFColors.DARK,
+        title: const Text("Ordres du travail"),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      GFDropdown<String>(
+                        dropdownButtonColor: GFColors.WARNING,
+                        items: [
+                          DropdownMenuItem<String>(
+                            child: Text('EN COURS'),
+                            value: 'EN COURS',
                           ),
-                        if (!_isCompleted)
-                          GFIconButton(
-                            tooltip: "Pause",
-                            color: GFColors.WARNING,
-                            size: GFSize.SMALL,
-                            icon: Icon(Icons.pause),
-                            onPressed: () async {
-                              ordre..status = "PAUSE";
-                              await ordre.save();
-                            },
+                          DropdownMenuItem<String>(
+                            child: Text('PAUSE'),
+                            value: 'PAUSE',
                           ),
-                        if (!_isCompleted)
-                          const SizedBox(
-                            width: 5,
+                          DropdownMenuItem<String>(
+                            child: Text('COMPLETED'),
+                            value: 'COMPLETED',
                           ),
-                        if (!_isCompleted)
-                          GFIconButton(
-                            tooltip: "Continuer",
-                            color: GFColors.SUCCESS,
-                            size: GFSize.SMALL,
-                            icon: Icon(Icons.play_arrow),
-                            onPressed: () async {
-                              ordre..status = "EN COURS";
-                              await ordre.save();
-                            },
-                          ),
-                        if (!_isCompleted)
-                          const SizedBox(
-                            width: 5,
-                          ),
-                        if (!_isCompleted)
-                          GFIconButton(
-                            tooltip: "Supprimer",
-                            color: GFColors.DANGER,
-                            size: GFSize.SMALL,
-                            icon: Icon(Icons.delete),
-                            onPressed: () async {
-                              await ordre.delete();
-                            },
-                          ),
-                      ],
-                    ),
-                  )),
-                  DataCell(SizedBox(
-                    width: 100,
-                    child: GFBadge(
-                      text: getStatus(ordre)['text'],
-                      size: GFSize.MEDIUM,
-                      color: getStatus(ordre)['color'],
-                    ),
-                  )),
-                  DataCell(Text(ordre.demandeur)),
-                  DataCell(Text(ordre.unite)),
-                  DataCell(Text(ordre.dateTimeDebut)),
-                  DataCell(Text(ordre.dateTimeFin)),
+                        ],
+                        value: _status,
+                        onChanged: (dynamic val) {
+                          setState(() {
+                            _status = val as String;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      GFButton(
+                        text: "Intervenants",
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/Intervenants');
+                        },
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      GFButton(
+                        text: "Ajouter un ordre",
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/CreateOrdreTravail');
+                        },
+                      ),
+                    ],
+                  )
                 ],
-              );
-            },
-          )
-          .toList()
-          .cast<DataRow>(),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              ValueListenableBuilder(
+                valueListenable: Boxes.getOrdres().listenable(),
+                builder: (BuildContext context, Box<OrdreTravailModel> box, _) {
+                  final ordres = box.values
+                      .toList()
+                      .cast<OrdreTravailModel>()
+                      .where((ordre) => getStatus(ordre)['text'] == _status)
+                      .toList();
+                  ordres.sort((a, b) => regularDateTime(a.dateTimeDebut)
+                      .compareTo(regularDateTime(b.dateTimeDebut)));
+                  return DataTable(
+                    headingRowColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.blueGrey[100] as Color),
+                    headingTextStyle: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.black),
+                    columns: [
+                      DataColumn(label: Text('N° ORDER')),
+                      DataColumn(label: Text('ACTIONS')),
+                      DataColumn(label: Text('STATUS')),
+                      DataColumn(label: Text('DEMANDEUR')),
+                      DataColumn(label: Text('UNITE')),
+                      DataColumn(label: Text('DATE DEBUT')),
+                      DataColumn(label: Text('DATE FIN')),
+                    ],
+                    rows: ordres
+                        .map(
+                          (ordre) {
+                            bool _isCompleted =
+                                getStatus(ordre)['text'] == "COMPLETED";
+                            return DataRow(
+                              cells: <DataCell>[
+                                DataCell(Text(ordre.id)),
+                                DataCell(Container(
+                                  child: Row(
+                                    children: [
+                                      GFIconButton(
+                                        tooltip: "Imprimer",
+                                        color: GFColors.DARK,
+                                        size: GFSize.SMALL,
+                                        icon: Icon(Icons.print),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PreviewOrdreTravail(
+                                                ordre: ordre,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      GFIconButton(
+                                        tooltip: "Details",
+                                        color: GFColors.INFO,
+                                        size: GFSize.SMALL,
+                                        icon: Icon(Icons.remove_red_eye),
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/EditOrdreTravail',
+                                            arguments: ordre,
+                                          );
+                                        },
+                                      ),
+                                      if (!_isCompleted)
+                                        const SizedBox(
+                                          width: 5,
+                                        ),
+                                      if (!_isCompleted)
+                                        GFIconButton(
+                                          tooltip: ordre.status == "EN COURS"
+                                              ? "PAUSE"
+                                              : "CONTINUER",
+                                          color: ordre.status == "EN COURS"
+                                              ? GFColors.WARNING
+                                              : GFColors.SUCCESS,
+                                          size: GFSize.SMALL,
+                                          icon: Icon(ordre.status == "EN COURS"
+                                              ? Icons.pause
+                                              : Icons.play_arrow),
+                                          onPressed: () async {
+                                            if (ordre.status == "EN COURS") {
+                                              ordre..status = "PAUSE";
+                                            } else {
+                                              ordre..status = "EN COURS";
+                                            }
+                                            await ordre.save();
+                                          },
+                                        ),
+                                      if (!_isCompleted)
+                                        const SizedBox(
+                                          width: 5,
+                                        ),
+                                      if (!_isCompleted)
+                                        GFIconButton(
+                                          tooltip: "CLOTURER",
+                                          color: GFColors.SECONDARY,
+                                          size: GFSize.SMALL,
+                                          icon: Icon(Icons.stop),
+                                          onPressed: () async {
+                                            ordre
+                                              ..dateTimeFin = convertToDateTime(
+                                                  DateTime.now().toString());
+                                            await ordre.save();
+                                          },
+                                        ),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      GFIconButton(
+                                        tooltip: "Supprimer",
+                                        color: GFColors.DANGER,
+                                        size: GFSize.SMALL,
+                                        icon: Icon(Icons.delete),
+                                        onPressed: () async {
+                                          await ordre.delete();
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                                DataCell(SizedBox(
+                                  width: 100,
+                                  child: GFBadge(
+                                    text: getStatus(ordre)['text'],
+                                    size: GFSize.MEDIUM,
+                                    color: getStatus(ordre)['color'],
+                                  ),
+                                )),
+                                DataCell(Text(ordre.demandeur)),
+                                DataCell(Text(ordre.unite)),
+                                DataCell(Text(ordre.dateTimeDebut)),
+                                DataCell(Text(ordre.dateTimeFin)),
+                              ],
+                            );
+                          },
+                        )
+                        .toList()
+                        .cast<DataRow>(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

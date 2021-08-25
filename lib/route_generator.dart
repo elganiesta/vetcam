@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'models/ordre_travail_model.dart';
 import 'views/gestion_ordres_travail/create.dart';
 import 'views/gestion_ordres_travail/edit.dart';
+import 'views/gestion_ordres_travail/intervenants.dart';
 import 'views/gestion_ordres_travail/ordres.dart';
 import 'views/sections.dart';
 import 'views/services.dart';
@@ -31,6 +32,8 @@ class RouteGenerator {
             builder: (_) => EditOrdreTravail(
                   ordre: args as OrdreTravailModel,
                 ));
+      case '/Intervenants':
+        return MaterialPageRoute(builder: (_) => Intervenants());
       default:
         return MaterialPageRoute(builder: (_) => const OrdresTravail());
     }
