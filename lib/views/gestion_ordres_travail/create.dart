@@ -36,7 +36,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
   String _duree = "";
   String _ordreId = "";
 
-  late IntervenantModel _intervenantSelected;
+  List<IntervenantModel> _intervenants = [];
 
   @override
   void initState() {
@@ -430,11 +430,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                                       .cast<
                                                           DropdownMenuItem<
                                                               IntervenantModel>>(),
-                                                  value: _intervenantSelected,
+                                                  value: intervenants[0],
                                                   onChanged: (dynamic val) {
                                                     setState(() {
-                                                      _intervenantSelected =
-                                                          val;
+                                                      _intervenants.add(val);
                                                     });
                                                   },
                                                 );
@@ -482,7 +481,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                     color: Colors.black,
                   ),
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                  children: const [
+                  children: [
                     TableRow(
                       children: [
                         CellTitle(text: 'NOM'),
@@ -490,25 +489,14 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         CellTitle(text: 'VISA'),
                       ],
                     ),
-                    TableRow(
-                      children: [
-                        Center(
-                          child: Text(
-                            "Nom prenom",
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            "Fonction",
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            "Signature",
-                          ),
-                        ),
-                      ],
-                    ),
+                    for (var intervenant in _intervenants)
+                      TableRow(
+                        children: [
+                          CellTitle(text: intervenant.nom, title: false,),
+                          CellTitle(text: intervenant.fonction, title: false,),
+                          CellTitle(text: "", title: false,),
+                        ],
+                      ),
                   ],
                 ),
                 // PIECES JOINTES
@@ -637,23 +625,24 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
 class CellTitle extends StatelessWidget {
   const CellTitle({
     Key? key,
-    required this.text,
+    required this.text, this.title = true,
   }) : super(key: key);
 
   final String text;
+  final bool title;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: title ? Colors.grey[200] : null,
       ),
       child: Center(
         child: Text(
           text,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+          style: TextStyle(
+            fontWeight: title ? FontWeight.bold : null,
           ),
         ),
       ),
