@@ -104,7 +104,8 @@ class _MatieresState extends State<Matieres> {
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return 'Please enter some text';
-                                          } else if(double.tryParse(value) == null) {
+                                          } else if (double.tryParse(value) ==
+                                              null) {
                                             return 'Only numbers are allowed';
                                           }
                                           return null;
@@ -116,7 +117,8 @@ class _MatieresState extends State<Matieres> {
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return 'Please enter some text';
-                                          } else if(double.tryParse(value) == null) {
+                                          } else if (double.tryParse(value) ==
+                                              null) {
                                             return 'Only numbers are allowed';
                                           }
                                           return null;
@@ -200,6 +202,7 @@ class _MatieresState extends State<Matieres> {
                         fontWeight: FontWeight.bold, color: Colors.black),
                     columns: [
                       DataColumn(label: Text('N°')),
+                      DataColumn(label: Text('Actions')),
                       DataColumn(label: Text('Code produit')),
                       DataColumn(label: Text('Désignation')),
                       DataColumn(label: Text('Unité')),
@@ -214,6 +217,23 @@ class _MatieresState extends State<Matieres> {
                             return DataRow(
                               cells: <DataCell>[
                                 DataCell(Text(matiere.id)),
+                                DataCell(
+                                  Container(
+                                    child: Row(
+                                      children: [
+                                        GFIconButton(
+                                          tooltip: "Supprimer",
+                                          color: GFColors.DANGER,
+                                          size: GFSize.SMALL,
+                                          icon: Icon(Icons.delete),
+                                          onPressed: () async {
+                                            await matiere.delete();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                                 DataCell(Text(matiere.code)),
                                 DataCell(Text(matiere.designation)),
                                 DataCell(Text(matiere.unite)),
