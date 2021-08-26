@@ -1,5 +1,7 @@
 import 'package:hive/hive.dart';
 
+import 'intervenant_model.dart';
+
 part 'ordre_travail_model.g.dart';
 
 @HiveType(typeId:0)
@@ -33,4 +35,7 @@ class OrdreTravailModel extends HiveObject {
 
   @HiveField(9)
   late String status;
+
+  @HiveField(10)
+  late List<IntervenantModel> intervenants;
 }

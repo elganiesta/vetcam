@@ -26,13 +26,14 @@ class OrdreTravailModelAdapter extends TypeAdapter<OrdreTravailModel> {
       ..travail = fields[6] as String
       ..pieces = (fields[7] as List).cast<dynamic>()
       ..commentaire = fields[8] as String
-      ..status = fields[9] as String;
+      ..status = fields[9] as String
+      ..intervenants = (fields[10] as List).cast<IntervenantModel>();
   }
 
   @override
   void write(BinaryWriter writer, OrdreTravailModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -52,7 +53,9 @@ class OrdreTravailModelAdapter extends TypeAdapter<OrdreTravailModel> {
       ..writeByte(8)
       ..write(obj.commentaire)
       ..writeByte(9)
-      ..write(obj.status);
+      ..write(obj.status)
+      ..writeByte(10)
+      ..write(obj.intervenants);
   }
 
   @override

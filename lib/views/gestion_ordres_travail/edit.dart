@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:getwidget/colors/gf_color.dart';
 import 'package:getwidget/components/button/gf_button.dart';
+import 'package:vetcam/boxes.dart';
+import 'package:vetcam/models/intervenant_model.dart';
 import 'package:vetcam/models/option_model.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
 import '../../const.dart';
+import 'create.dart';
 
 class EditOrdreTravail extends StatefulWidget {
   const EditOrdreTravail({Key? key, required this.ordre}) : super(key: key);
@@ -24,6 +27,8 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
   late List<OptionItem> _unites;
   late List<OptionItem> _types;
   late List<OptionItem> _pieces;
+  late List<OptionItem> _intervenants;
+  late OptionItem _intervSelected;
 
   late TextEditingController _debutController;
   late TextEditingController _finController;
@@ -39,10 +44,23 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
   void initState() {
     _ordre = widget.ordre;
 
+    _intervenants = Boxes.getIntervenants()
+        .values
+        .map((intervenant) {
+          var option = OptionItem(intervenant);
+          _ordre.intervenants.forEach((e) {
+            if (e.id == option.item.id) option.isSelected = true;
+          });
+          return option;
+        })
+        .toList()
+        .cast<OptionItem>();
+    if (_intervenants.length != 0) _intervSelected = _intervenants[0];
+
     _unites = unites
         .map((unite) {
           var option = OptionItem(unite);
-          if (_ordre.unite == option.name) option.isSelected = true;
+          if (_ordre.unite == option.item) option.isSelected = true;
           return option;
         })
         .toList()
@@ -51,7 +69,7 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
         .map((piece) {
           var option = OptionItem(piece);
           var result = _ordre.pieces
-              .firstWhere((e) => e == option.name, orElse: () => null);
+              .firstWhere((e) => e == option.item, orElse: () => null);
           if (result != null) option.isSelected = true;
           return option;
         })
@@ -61,7 +79,7 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
         .map((type) {
           var option = OptionItem(type);
           var result = _ordre.types
-              .firstWhere((e) => e == option.name, orElse: () => null);
+              .firstWhere((e) => e == option.item, orElse: () => null);
           if (result != null) option.isSelected = true;
           return option;
         })
@@ -99,27 +117,37 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
     bool _uniteIsValid = _unites
         .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
         .isSelected;
-    if (_pieceIsValid && _typeIsValid && _uniteIsValid) return true;
+    bool _intervIsValid = _intervenants
+        .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
+        .isSelected;
+    if (_pieceIsValid && _typeIsValid && _uniteIsValid && _intervIsValid) return true;
     return false;
   }
 
   Future<void> ajouterOrdre() async {
     List _typesList = _types.map((e) {
-      if (e.isSelected == true) return e.name;
+      if (e.isSelected == true) return e.item;
     }).toList();
     _typesList.removeWhere((e) => e == null);
     List _piecesList = _pieces.map((e) {
-      if (e.isSelected == true) return e.name;
+      if (e.isSelected == true) return e.item;
     }).toList();
+    List<IntervenantModel> _intervenantsList = [];
+    _intervenants.forEach((e) {
+      if (e.isSelected) {
+        _intervenantsList.add(e.item);
+      }
+    });
     _piecesList.removeWhere((e) => e == null);
     _ordre
       ..dateTimeDebut = convertToDateTime(_debutController.text)
       ..dateTimeFin = convertToDateTime(_finController.text)
       ..demandeur = _demandeurController.text
-      ..unite = _unites.firstWhere((unite) => unite.isSelected == true).name
+      ..unite = _unites.firstWhere((unite) => unite.isSelected == true).item
       ..travail = _commentaireController.text
       ..types = _typesList
       ..pieces = _piecesList
+      ..intervenants = _intervenantsList
       ..commentaire = _commentaireController.text;
     await _ordre.save();
   }
@@ -280,8 +308,8 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                                         }
                                       },
                                     ),
-                                    Text(unite.name),
-                                    if (unite.name == "AUTRE" &&
+                                    Text(unite.item),
+                                    if (unite.item == "AUTRE" &&
                                         unite.isSelected)
                                       Container(
                                         width: 250,
@@ -338,8 +366,8 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                                         }
                                       },
                                     ),
-                                    Text(type.name),
-                                    if (type.name == "AUTRE" && type.isSelected)
+                                    Text(type.item),
+                                    if (type.item == "AUTRE" && type.isSelected)
                                       Container(
                                         width: 250,
                                         child: Padding(
@@ -399,123 +427,122 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                   ],
                 ),
                 // LISTE DES INTERVENANTS
-                // Table(
-                //   border: TableBorder.all(
-                //     color: Colors.black,
-                //   ),
-                //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                //   children: [
-                //     const TableRow(
-                //       children: [
-                //         CellTitle(text: 'LISTE DES INTERVENANTS'),
-                //       ],
-                //     ),
-                //     TableRow(
-                //       children: [
-                //         FractionallySizedBox(
-                //           widthFactor: 1 / 5,
-                //           child: GFButton(
-                //             text: "Ajouter",
-                //             onPressed: () {
-                //               showDialog(
-                //                 context: context,
-                //                 builder: (context) {
-                //                   return Dialog(
-                //                     child: SingleChildScrollView(
-                //                       child: Column(
-                //                         children: [
-                //                           const Padding(
-                //                             padding: EdgeInsets.symmetric(
-                //                                 horizontal: 12.0),
-                //                             child: FractionallySizedBox(
-                //                               widthFactor: 0.4,
-                //                               child: TextField(
-                //                                 decoration: InputDecoration(
-                //                                     hintText: 'Nom'),
-                //                               ),
-                //                             ),
-                //                           ),
-                //                           const Padding(
-                //                             padding: EdgeInsets.symmetric(
-                //                                 horizontal: 12.0),
-                //                             child: FractionallySizedBox(
-                //                               widthFactor: 0.4,
-                //                               child: TextField(
-                //                                 decoration: InputDecoration(
-                //                                     hintText: 'Fonction'),
-                //                               ),
-                //                             ),
-                //                           ),
-                //                           const SizedBox(
-                //                             height: 20,
-                //                           ),
-                //                           Wrap(
-                //                             children: [
-                //                               GFButton(
-                //                                 text: "Enregistrer",
-                //                                 color: GFColors.SUCCESS,
-                //                                 onPressed: () {},
-                //                               ),
-                //                               const SizedBox(
-                //                                 width: 20,
-                //                               ),
-                //                               GFButton(
-                //                                 text: "Annuler",
-                //                                 color: GFColors.DANGER,
-                //                                 onPressed: () {
-                //                                   Navigator.pop(context);
-                //                                 },
-                //                               ),
-                //                             ],
-                //                           ),
-                //                         ],
-                //                       ),
-                //                     ),
-                //                   );
-                //                 },
-                //               );
-                //             },
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ],
-                // ),
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    const TableRow(
+                      children: [
+                        CellTitle(text: 'LISTE DES INTERVENANTS'),
+                      ],
+                    ),
+                    if(modifiable)
+                    TableRow(
+                      children: [
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 400.0),
+                          child: Wrap(
+                            children: [
+                              DropdownButton<OptionItem>(
+                                items: _intervenants
+                                    .map((intervenant) {
+                                      return DropdownMenuItem<OptionItem>(
+                                        child: Text(intervenant.item.nom),
+                                        value: intervenant,
+                                      );
+                                    })
+                                    .toList()
+                                    .cast<DropdownMenuItem<OptionItem>>(),
+                                value: _intervSelected,
+                                onChanged: (dynamic val) {
+                                  setState(() {
+                                    _intervSelected = val;
+                                  });
+                                },
+                              ),
+                              SizedBox(
+                                width: 50,
+                              ),
+                              FractionallySizedBox(
+                                widthFactor: 1 / 3,
+                                child: GFButton(
+                                  text: "Ajouter",
+                                  onPressed: () {
+                                    setState(() {
+                                      _intervenants.forEach((e) {
+                                        if (e.item.nom ==
+                                            _intervSelected.item.nom) {
+                                          e.isSelected = true;
+                                        }
+                                      });
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              FractionallySizedBox(
+                                widthFactor: 1 / 3,
+                                child: GFButton(
+                                  text: "Supprimer",
+                                  color: GFColors.DANGER,
+                                  onPressed: () {
+                                    setState(() {
+                                      _intervenants.forEach((e) {
+                                        if (e.item.nom ==
+                                            _intervSelected.item.nom) {
+                                          e.isSelected = false;
+                                        }
+                                      });
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
                 // add to LISTE DES INTERVENANTS
-                // Table(
-                //   border: TableBorder.all(
-                //     color: Colors.black,
-                //   ),
-                //   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                //   children: const [
-                //     TableRow(
-                //       children: [
-                //         CellTitle(text: 'NOM'),
-                //         CellTitle(text: 'FONCTION'),
-                //         CellTitle(text: 'VISA'),
-                //       ],
-                //     ),
-                //     TableRow(
-                //       children: [
-                //         Center(
-                //           child: Text(
-                //             "Nom prenom",
-                //           ),
-                //         ),
-                //         Center(
-                //           child: Text(
-                //             "Fonction",
-                //           ),
-                //         ),
-                //         Center(
-                //           child: Text(
-                //             "Signature",
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ],
-                // ),
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      children: [
+                        CellTitle(text: 'NOM'),
+                        CellTitle(text: 'FONCTION'),
+                        CellTitle(text: 'VISA'),
+                      ],
+                    ),
+                    for (var intervenant in _intervenants)
+                      if (intervenant.isSelected)
+                        TableRow(
+                          children: [
+                            CellTitle(
+                              text: intervenant.item.nom,
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: intervenant.item.fonction,
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: "",
+                              title: false,
+                            ),
+                          ],
+                        ),
+                  ],
+                ),
                 // PIECES JOINTES
                 Table(
                   border: TableBorder.all(
@@ -548,8 +575,8 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                                         }
                                       },
                                     ),
-                                    Text(piece.name),
-                                    if (piece.name == "AUTRE" &&
+                                    Text(piece.item),
+                                    if (piece.item == "AUTRE" &&
                                         piece.isSelected)
                                       Container(
                                         width: 250,
@@ -607,14 +634,15 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                     FractionallySizedBox(
                       widthFactor: 1 / 6,
                       child: GFButton(
-                        color: modifiable ? GFColors.SECONDARY : GFColors.DANGER,
+                        color:
+                            modifiable ? GFColors.SECONDARY : GFColors.DANGER,
                         text: modifiable ? "Sauvegarder" : "Modifier",
                         onPressed: () async {
                           if (modifiable) {
                             if (!_formKey.currentState!.validate()) {
                             } else if (!checkBoxValid()) {
                               showMessage(context,
-                                  "[UNITE, PIECES, TYPES] Please check at least one option.");
+                                  "[UNITE, PIECES, TYPES, INTEREVNANTS] Please check at least one option.");
                             } else {
                               await ajouterOrdre();
                               Navigator.pop(context);
@@ -642,33 +670,6 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class CellTitle extends StatelessWidget {
-  const CellTitle({
-    Key? key,
-    required this.text,
-  }) : super(key: key);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
           ),
         ),
       ),

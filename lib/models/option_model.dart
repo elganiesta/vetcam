@@ -1,9 +1,9 @@
 class OptionItem {
-  late String name;
+  late dynamic item;
   late bool isSelected;
  
-  OptionItem(String? name) {
-    this.name = name as String;
+  OptionItem(dynamic item) {
+    this.item = item;
     this.isSelected = false;
   }
 }

@@ -87,6 +87,15 @@ class _OrdresTravailState extends State<OrdresTravail> {
                   Row(
                     children: [
                       GFButton(
+                        text: "Produits",
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/Matieres');
+                        },
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      GFButton(
                         text: "Intervenants",
                         onPressed: () {
                           Navigator.pushNamed(context, '/Intervenants');
@@ -116,8 +125,8 @@ class _OrdresTravailState extends State<OrdresTravail> {
                       .cast<OrdreTravailModel>()
                       .where((ordre) => getStatus(ordre)['text'] == _status)
                       .toList();
-                  ordres.sort((a, b) => regularDateTime(a.dateTimeDebut)
-                      .compareTo(regularDateTime(b.dateTimeDebut)));
+                  ordres.sort((a, b) => regularDateTime(b.dateTimeDebut)
+                      .compareTo(regularDateTime(a.dateTimeDebut)));
                   return DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
                         (states) => Colors.blueGrey[100] as Color),

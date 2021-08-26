@@ -214,7 +214,50 @@ class PreviewOrdreTravail extends StatelessWidget {
                   ),
                   pw.TableRow(
                     children: [
-                      pwCell(ordre.travail, false),
+                      pw.Container(
+                        height: 60,
+                        child: pwCell(ordre.travail, false),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              //Listes intervenants
+              pw.Table(
+                border: pw.TableBorder.all(
+                  width: 1,
+                ),
+                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
+                children: [
+                  pw.TableRow(
+                    children: [
+                      pwCell('LISTE DES INTERVENANTS', true),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Table(
+                        border: pw.TableBorder.all(
+                          width: 0.5,
+                        ),
+                        children: [
+                          pw.TableRow(
+                            children: [
+                              pwCell("NOM", false),
+                              pwCell("FONCTION", false),
+                              pwCell("VISA", false),
+                            ],
+                          ),
+                          for (var intervenant in ordre.intervenants)
+                            pw.TableRow(
+                              children: [
+                                pwCell(intervenant.nom, false),
+                                pwCell(intervenant.fonction, false),
+                                pwCell("", false),
+                              ],
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ],

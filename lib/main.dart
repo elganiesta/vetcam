@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:vetcam/models/ordre_travail_model.dart';
 import 'package:vetcam/notifiers/workshops_notifier.dart';
+import 'models/ordre_travail_model.dart';
 import 'models/intervenant_model.dart';
+import 'models/matiere_model.dart';
 import 'route_generator.dart';
 
 void main() async {
@@ -12,8 +13,11 @@ void main() async {
 
   Hive.registerAdapter(OrdreTravailModelAdapter());
   Hive.registerAdapter(IntervenantModelAdapter());
+  Hive.registerAdapter(MatiereModelAdapter());
+  // await Hive.deleteBoxFromDisk('ordresTravail');
   await Hive.openBox<OrdreTravailModel>('ordresTravail');
   await Hive.openBox<IntervenantModel>('intervenants');
+  await Hive.openBox<MatiereModel>('matieres');
   await Hive.openBox('ids');
   runApp(const MyApp());
 }
