@@ -12,9 +12,9 @@ import 'package:vetcam/const.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
 class PreviewOrdreTravail extends StatelessWidget {
-  final OrdreTravailModel ordre;
+  final List<OrdreTravailModel> ordres;
 
-  const PreviewOrdreTravail({Key? key, required this.ordre}) : super(key: key);
+  const PreviewOrdreTravail({Key? key, required this.ordres}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +29,8 @@ class PreviewOrdreTravail extends StatelessWidget {
         canChangeOrientation: false,
         canDebug: false,
         pdfFileName:
-            'Ordre travail N ${ordre.id} - ${DateFormat('yyyy_MM_d').format(DateTime.now())}',
-        build: (format) => _generatePdf(format, ordre),
+            'Ordres travail - ${DateFormat('yyyy_MM_d').format(DateTime.now())}',
+        build: (format) => _generatePdf(format, ordres),
         onPrinted: (_) {
           Navigator.pop(context);
         },
@@ -39,320 +39,426 @@ class PreviewOrdreTravail extends StatelessWidget {
   }
 
   Future<Uint8List> _generatePdf(
-      PdfPageFormat format, OrdreTravailModel ordre) async {
+      PdfPageFormat format, List<OrdreTravailModel> ordres) async {
     final pdf = pw.Document(version: PdfVersion.pdf_1_5, compress: true);
     final image = await imageFromAssetBundle('assets/images/vetcam.png');
 
-    pdf.addPage(
-      pw.Page(
-        margin: pw.EdgeInsets.all(30.0),
-        pageFormat: format,
-        build: (context) {
-          return pw.Column(
-            children: [
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 2,
-                ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pw.Expanded(
-                        child: pw.Container(
-                          height: 70,
+    for (OrdreTravailModel ordre in ordres)
+      pdf.addPage(
+        pw.Page(
+          margin: pw.EdgeInsets.all(30.0),
+          pageFormat: format,
+          build: (context) {
+            return pw.Column(
+              children: [
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 2,
+                  ),
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pw.Expanded(
+                          child: pw.Container(
+                            height: 70,
+                            child: pw.Center(
+                              child: pw.Image(image),
+                            ),
+                          ),
+                        ),
+                        pw.Expanded(
                           child: pw.Center(
-                            child: pw.Image(image),
+                            child: pw.Text(
+                              "ORDRE DU TRAVAIL",
+                              style: pw.TextStyle(
+                                  fontSize: 12, fontWeight: pw.FontWeight.bold),
+                            ),
                           ),
                         ),
-                      ),
-                      pw.Expanded(
-                        child: pw.Center(
-                          child: pw.Text(
-                            "ORDRE DU TRAVAIL",
-                            style: pw.TextStyle(
-                                fontSize: 12, fontWeight: pw.FontWeight.bold),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(
+                  height: 20,
+                ),
+                // Date, time, demandeur, n ordre
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
+                  ),
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('DEBUT', true),
+                        pwCell('FIN', true),
+                        pwCell('DUREE', true),
+                        pwCell('DEMANDEUR', true),
+                        pwCell('N° ORDRE', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pwCell(ordre.dateTimeDebut, false),
+                        pwCell(ordre.dateTimeFin, false),
+                        pwCell('', false),
+                        pwCell(ordre.demandeur, false),
+                        pwCell(ordre.id, false),
+                      ],
+                    ),
+                  ],
+                ),
+                // Unite
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
+                  ),
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('UNITE BENIFICIARE', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Table(
+                          border: pw.TableBorder.all(
+                            width: 0.5,
                           ),
+                          children: [
+                            pw.TableRow(
+                              children: unites
+                                  .map((unite) {
+                                    return pwCell(unite, false);
+                                  })
+                                  .toList()
+                                  .cast<pw.Widget>(),
+                            ),
+                            pw.TableRow(
+                              children: unites
+                                  .map((unite) {
+                                    if (unite == "AUTRE")
+                                      return pwCell(
+                                          ordre.autreUnite == ""
+                                              ? ""
+                                              : ordre.autreUnite as String,
+                                          false);
+                                    else if (unite == ordre.unite)
+                                      return pwCell("X", false);
+                                    else
+                                      return pwCell("", false);
+                                  })
+                                  .toList()
+                                  .cast<pw.Widget>(),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              pw.SizedBox(
-                height: 20,
-              ),
-              // Date, time, demandeur, n ordre
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('DEBUT', true),
-                      pwCell('FIN', true),
-                      pwCell('DUREE', true),
-                      pwCell('DEMANDEUR', true),
-                      pwCell('N° ORDRE', true),
-                    ],
+                // Type du travail
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
                   ),
-                  pw.TableRow(
-                    children: [
-                      pwCell(ordre.dateTimeDebut, false),
-                      pwCell(ordre.dateTimeFin, false),
-                      pwCell('', false),
-                      pwCell(ordre.demandeur, false),
-                      pwCell(ordre.id, false),
-                    ],
-                  ),
-                ],
-              ),
-              // Unite
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
-                ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('UNITE BENIFICIARE', true),
-                    ],
-                  ),
-                  pw.TableRow(
-                    children: [
-                      pw.Table(
-                        border: pw.TableBorder.all(
-                          width: 0.5,
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('TYPE DU TRAVAIL', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Table(
+                          border: pw.TableBorder.all(
+                            width: 0.5,
+                          ),
+                          children: [
+                            pw.TableRow(
+                              children: typesTravail
+                                  .map((type) {
+                                    return pwCell(type, false);
+                                  })
+                                  .toList()
+                                  .cast<pw.Widget>(),
+                            ),
+                            pw.TableRow(
+                              children: typesTravail
+                                  .map((type) {
+                                    var result = ordre.types.firstWhere(
+                                        (e) => e == type,
+                                        orElse: () => null);
+                                    if (type == "AUTRE")
+                                      return pwCell(
+                                          ordre.autreType == ""
+                                              ? ""
+                                              : ordre.autreType as String,
+                                          false);
+                                    else if (result != null)
+                                      return pwCell("X", false);
+                                    else
+                                      return pwCell("", false);
+                                  })
+                                  .toList()
+                                  .cast<pw.Widget>(),
+                            ),
+                          ],
                         ),
-                        children: [
-                          pw.TableRow(
-                            children: unites
-                                .map((unite) {
-                                  return pwCell(unite, false);
-                                })
-                                .toList()
-                                .cast<pw.Widget>(),
-                          ),
-                          pw.TableRow(
-                            children: unites
-                                .map((unite) {
-                                  if (unite == ordre.unite)
-                                    return pwCell("X", false);
-                                  else
-                                    return pwCell("", false);
-                                })
-                                .toList()
-                                .cast<pw.Widget>(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Type du travail
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('TYPE DU TRAVAIL', true),
-                    ],
+                // Travail demande
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
                   ),
-                  pw.TableRow(
-                    children: [
-                      pw.Table(
-                        border: pw.TableBorder.all(
-                          width: 0.5,
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('TRAVAIL DEMANDE', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Container(
+                          height: 60,
+                          child: pwCell(ordre.travail, false),
                         ),
-                        children: [
-                          pw.TableRow(
-                            children: typesTravail
-                                .map((type) {
-                                  return pwCell(type, false);
-                                })
-                                .toList()
-                                .cast<pw.Widget>(),
-                          ),
-                          pw.TableRow(
-                            children: typesTravail
-                                .map((type) {
-                                  var result = ordre.types.firstWhere(
-                                      (e) => e == type,
-                                      orElse: () => null);
-                                  if (result != null)
-                                    return pwCell("X", false);
-                                  else
-                                    return pwCell("", false);
-                                })
-                                .toList()
-                                .cast<pw.Widget>(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Travail demande
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('TRAVAIL DEMANDE', true),
-                    ],
+                //Listes intervenants
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
                   ),
-                  pw.TableRow(
-                    children: [
-                      pw.Container(
-                        height: 60,
-                        child: pwCell(ordre.travail, false),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              //Listes intervenants
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
-                ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('LISTE DES INTERVENANTS', true),
-                    ],
-                  ),
-                  pw.TableRow(
-                    children: [
-                      pw.Table(
-                        border: pw.TableBorder.all(
-                          width: 0.5,
-                        ),
-                        children: [
-                          pw.TableRow(
-                            children: [
-                              pwCell("NOM", false),
-                              pwCell("FONCTION", false),
-                              pwCell("VISA", false),
-                            ],
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('LISTE DES INTERVENANTS', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Table(
+                          border: pw.TableBorder.all(
+                            width: 0.5,
                           ),
-                          for (var intervenant in ordre.intervenants)
+                          children: [
                             pw.TableRow(
                               children: [
-                                pwCell(intervenant.nom, false),
-                                pwCell(intervenant.fonction, false),
-                                pwCell("", false),
+                                pwCell("NOM", false),
+                                pwCell("FONCTION", false),
+                                pwCell("VISA", false),
                               ],
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              //Pieces jointes
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
-                ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('PIECES ', true),
-                    ],
-                  ),
-                  pw.TableRow(
-                    children: [
-                      pw.Table(
-                        border: pw.TableBorder.all(
-                          width: 0.5,
+                            for (var intervenant in ordre.intervenants)
+                              pw.TableRow(
+                                children: [
+                                  pwCell(intervenant.nom, false),
+                                  pwCell(intervenant.fonction, false),
+                                  pwCell("", false),
+                                ],
+                              ),
+                          ],
                         ),
-                        children: [
-                          pw.TableRow(
-                            children: pieces
-                                .map((piece) {
-                                  return pwCell(piece, false);
-                                })
-                                .toList()
-                                .cast<pw.Widget>(),
-                          ),
-                          pw.TableRow(
-                            children: pieces
-                                .map((piece) {
-                                  var result = ordre.pieces.firstWhere(
-                                      (e) => e == piece,
-                                      orElse: () => null);
-                                  if (result != null)
-                                    return pwCell("X", false);
-                                  else
-                                    return pwCell("", false);
-                                })
-                                .toList()
-                                .cast<pw.Widget>(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('COMMENTAIRE', true),
-                    ],
+                //Listes matieres
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
                   ),
-                  pw.TableRow(
-                    children: [
-                      pwCell(ordre.commentaire, false),
-                    ],
-                  ),
-                ],
-              ),
-              pw.Spacer(),
-              pw.Table(
-                border: pw.TableBorder.all(
-                  width: 1,
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('PIECES ET MATIERES CONSOMMEES', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Table(
+                          border: pw.TableBorder.all(
+                            width: 0.5,
+                          ),
+                          children: [
+                            pw.TableRow(
+                              children: [
+                                pwCell('N°', false),
+                                pwCell('Code Produit', false),
+                                pwCell('Désignation', false),
+                                pwCell('Unité', false),
+                                pwCell('Quantité', false),
+                                pwCell('Prix Unité', false),
+                                pwCell('Prix Total', false),
+                                pwCell('Observation', false),
+                              ],
+                            ),
+                            for (var matiere in ordre.matieres)
+                              pw.TableRow(
+                                children: [
+                                  pwCell(matiere.id, false),
+                                  pwCell(matiere.code, false),
+                                  pwCell(matiere.designation, false),
+                                  pwCell(matiere.unite, false),
+                                  pwCell(matiere.quantite.toString(), false),
+                                  pwCell(matiere.prixU.toString(), false),
+                                  pwCell(
+                                      (matiere.prixU * matiere.quantite)
+                                          .toString(),
+                                      false),
+                                  pwCell(matiere.observation, false),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                children: [
-                  pw.TableRow(
-                    children: [
-                      pwCell('VISA DEMANDEUR', true),
-                      pwCell('VISA RESPONSABLE DE MAINTENANCE', true),
-                    ],
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
                   ),
-                  pw.TableRow(
-                    children: [
-                      pw.Expanded(child: pw.Container(height: 60)),
-                      pw.Expanded(child: pw.Container(height: 60)),
-                    ],
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('TOTAL', true),
+                        pwCell(
+                          ordre.matieres
+                                  .map((e) {
+                                    return e.prixU * e.quantite;
+                                  })
+                                  .reduce((value, element) => value + element)
+                                  .toString() +
+                              ' DH',
+                          false,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                //Pieces jointes
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
                   ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('PIECES ', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Table(
+                          border: pw.TableBorder.all(
+                            width: 0.5,
+                          ),
+                          children: [
+                            pw.TableRow(
+                              children: pieces
+                                  .map((piece) {
+                                    return pwCell(piece, false);
+                                  })
+                                  .toList()
+                                  .cast<pw.Widget>(),
+                            ),
+                            pw.TableRow(
+                              children: pieces
+                                  .map((piece) {
+                                    var result = ordre.pieces.firstWhere(
+                                        (e) => e == piece,
+                                        orElse: () => null);
+                                    if (piece == "AUTRE")
+                                      return pwCell(
+                                          ordre.autrePiece == ""
+                                              ? ""
+                                              : ordre.autrePiece as String,
+                                          false);
+                                    else if (result != null)
+                                      return pwCell("X", false);
+                                    else
+                                      return pwCell("", false);
+                                  })
+                                  .toList()
+                                  .cast<pw.Widget>(),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
+                  ),
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('COMMENTAIRE', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pwCell(ordre.commentaire, false),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.Spacer(),
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    width: 1,
+                  ),
+                  defaultVerticalAlignment:
+                      pw.TableCellVerticalAlignment.middle,
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pwCell('VISA DEMANDEUR', true),
+                        pwCell('VISA RESPONSABLE DE MAINTENANCE', true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Expanded(child: pw.Container(height: 60)),
+                        pw.Expanded(child: pw.Container(height: 60)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      );
 
     return pdf.save();
   }

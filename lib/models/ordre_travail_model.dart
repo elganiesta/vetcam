@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:vetcam/models/matiere_model.dart';
 
 import 'intervenant_model.dart';
 
@@ -22,20 +23,34 @@ class OrdreTravailModel extends HiveObject {
   late String unite;
 
   @HiveField(5)
-  late List types;
+  String? autreUnite;
 
   @HiveField(6)
-  late String travail;
+  late List types;
 
   @HiveField(7)
-  late List pieces;
+  String? autreType;
 
   @HiveField(8)
-  late String commentaire;
+  late String travail;
 
   @HiveField(9)
-  late String status;
+  late List pieces;
 
   @HiveField(10)
+  String? autrePiece;
+
+  @HiveField(11)
+  late String commentaire;
+
+  @HiveField(12)
+  late String status;
+
+  @HiveField(13)
   late List<IntervenantModel> intervenants;
+
+  @HiveField(14)
+  late List<MatiereModel> matieres;
+
+  
 }

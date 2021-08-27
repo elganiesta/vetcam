@@ -8,6 +8,7 @@ import 'package:getwidget/getwidget.dart';
 import 'package:vetcam/boxes.dart';
 import 'package:vetcam/controllers/ordres_travail_controller.dart';
 import 'package:vetcam/models/intervenant_model.dart';
+import 'package:vetcam/models/matiere_model.dart';
 import 'package:vetcam/models/option_model.dart';
 import 'package:vetcam/models/ordre_travail_model.dart';
 
@@ -28,6 +29,8 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
   late List<OptionItem> _pieces;
   late List<OptionItem> _intervenants;
   late OptionItem _intervSelected;
+  late List<OptionItem> _matieres;
+  late OptionItem _matiereSelected;
 
   late TextEditingController _debutController;
   late TextEditingController _finController;
@@ -36,15 +39,24 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
   late TextEditingController _commentaireController;
   String _duree = "";
   String _ordreId = "";
+  String _autreUnite = "";
+  String _autreType = "";
+  String _autrePiece = "";
 
   @override
   void initState() {
     _intervenants = Boxes.getIntervenants()
         .values
-        .map((type) => OptionItem(type))
+        .map((intervenant) => OptionItem(intervenant))
         .toList()
         .cast<OptionItem>();
     if (_intervenants.length != 0) _intervSelected = _intervenants[0];
+    _matieres = Boxes.getMatieres()
+        .values
+        .map((matiere) => OptionItem(matiere))
+        .toList()
+        .cast<OptionItem>();
+    if (_matieres.length != 0) _matiereSelected = _matieres[0];
 
     _unites =
         unites.map((unite) => OptionItem(unite)).toList().cast<OptionItem>();
@@ -76,6 +88,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
     }
   }
 
+  String calculateTotal(OptionItem option) {
+    return (option.item.prixU * option.item.quantite).toString();
+  }
+
   bool checkBoxValid() {
     bool _pieceIsValid = _pieces
         .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
@@ -89,7 +105,14 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
     bool _intervIsValid = _intervenants
         .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
         .isSelected;
-    if (_pieceIsValid && _typeIsValid && _uniteIsValid && _intervIsValid) return true;
+    bool _matiereIsValid = _matieres
+        .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
+        .isSelected;
+    if (_pieceIsValid &&
+        _typeIsValid &&
+        _uniteIsValid &&
+        _intervIsValid &&
+        _matiereIsValid) return true;
     return false;
   }
 
@@ -107,6 +130,12 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
         _intervenantsList.add(e.item);
       }
     });
+    List<MatiereModel> _matieresList = [];
+    _matieres.forEach((e) {
+      if (e.isSelected) {
+        _matieresList.add(e.item);
+      }
+    });
     _piecesList.removeWhere((e) => e == null);
     final ordre = OrdreTravailModel()
       ..id = _ordreId
@@ -115,10 +144,14 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
       ..dateTimeFin = convertToDateTime(_finController.text)
       ..demandeur = _demandeurController.text
       ..unite = _unites.firstWhere((unite) => unite.isSelected == true).item
+      ..autreUnite = _autreUnite
       ..travail = _travailController.text
       ..types = _typesList
+      ..autreType = _autreType
       ..pieces = _piecesList
+      ..autrePiece = _autrePiece
       ..intervenants = _intervenantsList
+      ..matieres = _matieresList
       ..commentaire = _commentaireController.text;
     await addOrdreTravail(ordre);
     await updateLastOrdreId(int.parse(_ordreId));
@@ -272,6 +305,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                             unite.isSelected = false;
                                           });
                                           unite.isSelected = value as bool;
+                                          if (unite.item != "AUTRE" &&
+                                                value == true) {
+                                              _autreUnite = "";
+                                            }
                                         });
                                       },
                                     ),
@@ -280,13 +317,26 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                         unite.isSelected)
                                       Container(
                                         width: 250,
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 12.0),
-                                          child: TextField(
+                                          child: TextFormField(
+                                            onChanged: (String val) {
+                                              setState(() {
+                                                _autreUnite = val;
+                                              });
+                                            },
                                             decoration: InputDecoration(
                                               hintText: 'Tapez ici..',
                                             ),
+                                            validator: (value) {
+                                              if (unite.item == "AUTRE" && unite.isSelected) {
+                                                if(value == null || value.isEmpty) {
+                                                  return 'Please enter some text';
+                                                }
+                                              }
+                                              return null;
+                                            },
                                           ),
                                         ),
                                       ),
@@ -327,6 +377,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                       onChanged: (bool? value) {
                                         setState(() {
                                           type.isSelected = value as bool;
+                                          if (type.item == "AUTRE" &&
+                                                value == false) {
+                                              _autreType = "";
+                                            }
                                         });
                                       },
                                     ),
@@ -334,13 +388,26 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                     if (type.item == "AUTRE" && type.isSelected)
                                       Container(
                                         width: 250,
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 12.0),
-                                          child: TextField(
+                                          child: TextFormField(
+                                            onChanged: (String val) {
+                                              setState(() {
+                                                _autreType = val;
+                                              });
+                                            },
                                             decoration: InputDecoration(
                                               hintText: 'Tapez ici..',
                                             ),
+                                            validator: (value) {
+                                              if (type.item == "AUTRE" && type.isSelected) {
+                                                if(value == null || value.isEmpty) {
+                                                  return 'Please enter some text';
+                                                }
+                                              }
+                                              return null;
+                                            },
                                           ),
                                         ),
                                       ),
@@ -404,7 +471,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                       children: [
                         Padding(
                           padding:
-                              const EdgeInsets.symmetric(horizontal: 400.0),
+                              const EdgeInsets.symmetric(horizontal: 300.0),
                           child: Wrap(
                             children: [
                               DropdownButton<OptionItem>(
@@ -434,8 +501,8 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                   onPressed: () {
                                     setState(() {
                                       _intervenants.forEach((e) {
-                                        if (e.item.nom ==
-                                            _intervSelected.item.nom) {
+                                        if (e.item.id ==
+                                            _intervSelected.item.id) {
                                           e.isSelected = true;
                                         }
                                       });
@@ -454,8 +521,8 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                   onPressed: () {
                                     setState(() {
                                       _intervenants.forEach((e) {
-                                        if (e.item.nom ==
-                                            _intervSelected.item.nom) {
+                                        if (e.item.id ==
+                                            _intervSelected.item.id) {
                                           e.isSelected = false;
                                         }
                                       });
@@ -504,6 +571,174 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         ),
                   ],
                 ),
+                // LISTE DES MATIERES
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    const TableRow(
+                      children: [
+                        CellTitle(text: 'PIECES ET MATIERES CONSOMMEES'),
+                      ],
+                    ),
+                    TableRow(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Wrap(
+                            children: [
+                              FractionallySizedBox(
+                                widthFactor: 0.5,
+                                child: DropdownButton<OptionItem>(
+                                  items: _matieres
+                                      .map((matiere) {
+                                        return DropdownMenuItem<OptionItem>(
+                                          child: Text(matiere.item.designation),
+                                          value: matiere,
+                                        );
+                                      })
+                                      .toList()
+                                      .cast<DropdownMenuItem<OptionItem>>(),
+                                  value: _matiereSelected,
+                                  onChanged: (dynamic val) {
+                                    setState(() {
+                                      _matiereSelected = val;
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(
+                                width: 50,
+                              ),
+                              FractionallySizedBox(
+                                widthFactor: 0.2,
+                                child: GFButton(
+                                  text: "Ajouter",
+                                  onPressed: () {
+                                    setState(() {
+                                      _matieres.forEach((e) {
+                                        if (e.item.code ==
+                                            _matiereSelected.item.code) {
+                                          e.isSelected = true;
+                                        }
+                                      });
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              FractionallySizedBox(
+                                widthFactor: 0.2,
+                                child: GFButton(
+                                  text: "Supprimer",
+                                  color: GFColors.DANGER,
+                                  onPressed: () {
+                                    setState(() {
+                                      _matieres.forEach((e) {
+                                        if (e.item.code ==
+                                            _matiereSelected.item.code) {
+                                          e.isSelected = false;
+                                        }
+                                      });
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+                //add to LISTE DES INTERVENANTS
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      children: [
+                        CellTitle(text: 'N°'),
+                        CellTitle(text: 'Code Produit'),
+                        CellTitle(text: 'Désignation'),
+                        CellTitle(text: 'Unité'),
+                        CellTitle(text: 'Quantité'),
+                        CellTitle(text: 'Prix Unité'),
+                        CellTitle(text: 'Prix Total'),
+                        CellTitle(text: 'Observation'),
+                      ],
+                    ),
+                    for (var matiere in _matieres)
+                      if (matiere.isSelected)
+                        TableRow(
+                          children: [
+                            CellTitle(
+                              text: matiere.item.id,
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: matiere.item.code,
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: matiere.item.designation,
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: matiere.item.unite,
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: matiere.item.quantite.toString(),
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: matiere.item.prixU.toString() + ' DH',
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: calculateTotal(matiere) + ' DH',
+                              title: false,
+                            ),
+                            CellTitle(
+                              text: matiere.item.observation,
+                              title: false,
+                            ),
+                          ],
+                        ),
+                  ],
+                ),
+                Table(
+                  border: TableBorder.all(
+                    color: Colors.black,
+                  ),
+                  columnWidths: {
+                    0: FractionColumnWidth(0.75),
+                  },
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      children: [
+                        CellTitle(text: 'TOTAL'),
+                        CellTitle(
+                          text: _matieres
+                              .map((e) {
+                                if(e.isSelected) return e.item.prixU * e.item.quantite;
+                                else return 0;
+                              })
+                              .reduce((value, element) => value + element).toString() + ' DH',
+                          title: false,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 // PIECES JOINTES
                 Table(
                   border: TableBorder.all(
@@ -531,6 +766,9 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                       onChanged: (bool? value) {
                                         setState(() {
                                           piece.isSelected = value as bool;
+                                          if(piece.item == "AUTRE" && value == false) {
+                                            _autrePiece = "";
+                                          }
                                         });
                                       },
                                     ),
@@ -539,13 +777,26 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                         piece.isSelected)
                                       Container(
                                         width: 250,
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 12.0),
-                                          child: TextField(
+                                          child: TextFormField(
+                                            onChanged: (String val) {
+                                              setState(() {
+                                                _autrePiece = val;
+                                              });
+                                            },
                                             decoration: InputDecoration(
                                               hintText: 'Tapez ici..',
                                             ),
+                                            validator: (value) {
+                                              if (piece.item == "AUTRE" && piece.isSelected) {
+                                                if(value == null || value.isEmpty) {
+                                                  return 'Please enter some text';
+                                                }
+                                              }
+                                              return null;
+                                            },
                                           ),
                                         ),
                                       ),
@@ -587,22 +838,22 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                 ),
                 // Actions
                 FractionallySizedBox(
-                      widthFactor: 1 / 6,
-                      child: GFButton(
-                        color: GFColors.SECONDARY,
-                        text: "Sauvegarder",
-                        onPressed: () async {
-                          if (!_formKey.currentState!.validate()) {
-                          } else if (!checkBoxValid()) {
-                            showMessage(context,
-                                "[UNITE, PIECES, TYPES, INTERVENANTS] Please check at least one option.");
-                          } else {
-                            await ajouterOrdre();
-                            Navigator.pop(context);
-                          }
-                        },
-                      ),
-                    ),
+                  widthFactor: 1 / 6,
+                  child: GFButton(
+                    color: GFColors.SECONDARY,
+                    text: "Sauvegarder",
+                    onPressed: () async {
+                      if (!_formKey.currentState!.validate()) {
+                      } else if (!checkBoxValid()) {
+                        showMessage(context,
+                            "[UNITE, PIECES, TYPES, INTERVENANTS] Please check at least one option.");
+                      } else {
+                        await ajouterOrdre();
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           ),

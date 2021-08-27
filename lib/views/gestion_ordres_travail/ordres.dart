@@ -18,6 +18,7 @@ class OrdresTravail extends StatefulWidget {
 
 class _OrdresTravailState extends State<OrdresTravail> {
   String _status = "EN COURS";
+  String _search = "";
 
   @override
   void dispose() {
@@ -82,6 +83,30 @@ class _OrdresTravailState extends State<OrdresTravail> {
                           });
                         },
                       ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      GFButton(
+                        text: "Imprimer ordres en cours",
+                        color: GFColors.DARK,
+                        onPressed: () {
+                          var ordres = Boxes.getOrdres()
+                              .values
+                              .toList()
+                              .cast<OrdreTravailModel>()
+                              .where((ordre) =>
+                                  getStatus(ordre)['text'] == 'EN COURS')
+                              .toList();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PreviewOrdreTravail(
+                                ordres: ordres,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                   Row(
@@ -117,6 +142,28 @@ class _OrdresTravailState extends State<OrdresTravail> {
               const SizedBox(
                 height: 20,
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 300.0),
+                child: Card(
+                  child: new ListTile(
+                    leading: new Icon(Icons.search),
+                    title: new TextField(
+                      onChanged: (String val) {
+                        setState(() {
+                          _search = val;
+                        });
+                      },
+                      decoration: new InputDecoration(
+                        hintText: 'Search',
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
               ValueListenableBuilder(
                 valueListenable: Boxes.getOrdres().listenable(),
                 builder: (BuildContext context, Box<OrdreTravailModel> box, _) {
@@ -124,6 +171,9 @@ class _OrdresTravailState extends State<OrdresTravail> {
                       .toList()
                       .cast<OrdreTravailModel>()
                       .where((ordre) => getStatus(ordre)['text'] == _status)
+                      .where((ordre) => ordre.demandeur
+                          .toLowerCase()
+                          .contains(_search.toLowerCase()))
                       .toList();
                   ordres.sort((a, b) => regularDateTime(b.dateTimeDebut)
                       .compareTo(regularDateTime(a.dateTimeDebut)));
@@ -138,6 +188,7 @@ class _OrdresTravailState extends State<OrdresTravail> {
                       DataColumn(label: Text('STATUS')),
                       DataColumn(label: Text('DEMANDEUR')),
                       DataColumn(label: Text('UNITE')),
+                      DataColumn(label: Text('INTERVENANTS')),
                       DataColumn(label: Text('DATE DEBUT')),
                       DataColumn(label: Text('DATE FIN')),
                     ],
@@ -163,7 +214,7 @@ class _OrdresTravailState extends State<OrdresTravail> {
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   PreviewOrdreTravail(
-                                                ordre: ordre,
+                                                ordres: [ordre],
                                               ),
                                             ),
                                           );
@@ -251,7 +302,24 @@ class _OrdresTravailState extends State<OrdresTravail> {
                                   ),
                                 )),
                                 DataCell(Text(ordre.demandeur)),
-                                DataCell(Text(ordre.unite)),
+                                DataCell(Text(ordre.autreUnite == ""
+                                    ? ordre.unite
+                                    : ordre.autreUnite as String)),
+                                DataCell(Container(
+                                  child: Wrap(
+                                    children: ordre.intervenants
+                                        .map((e) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(2.0),
+                                            child: Chip(
+                                              label: Text(e.nom),
+                                            ),
+                                          );
+                                        })
+                                        .toList()
+                                        .cast(),
+                                  ),
+                                )),
                                 DataCell(Text(ordre.dateTimeDebut)),
                                 DataCell(Text(ordre.dateTimeFin)),
                               ],

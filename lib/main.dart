@@ -14,7 +14,7 @@ void main() async {
   Hive.registerAdapter(OrdreTravailModelAdapter());
   Hive.registerAdapter(IntervenantModelAdapter());
   Hive.registerAdapter(MatiereModelAdapter());
-  // await Hive.deleteBoxFromDisk('ordresTravail');
+  await Hive.deleteBoxFromDisk('ordresTravail');
   await Hive.openBox<OrdreTravailModel>('ordresTravail');
   await Hive.openBox<IntervenantModel>('intervenants');
   await Hive.openBox<MatiereModel>('matieres');
