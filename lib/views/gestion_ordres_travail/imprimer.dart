@@ -369,7 +369,7 @@ class PreviewOrdreTravail extends StatelessWidget {
                   children: [
                     pw.TableRow(
                       children: [
-                        pwCell('PIECES ', true),
+                        pwCell('PIECES JOINTES', true),
                       ],
                     ),
                     pw.TableRow(

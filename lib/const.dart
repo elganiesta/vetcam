@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-const workshops = ['Alpha', 'Tensyland', 'NovaBloc'];
-
-const sections = ['Production', 'Maintenacne'];
-
-const services = ['ORDRE DU TRAVAIL'];
-
 List<String> unites = [
   "ALPHA",
   "TENSYLAND",
@@ -35,6 +29,9 @@ List<String> pieces = [
   "FICHE TECHNIQUE",
   "AUTRE",
 ];
+
+List<String> sections = ['ALPHA', 'TENSYLAND', 'NOVABLOC'];
+List<String> statusMoules = ['NEUF', 'EN BONNE ETAT', 'REPARE', 'USE'];
 
 String convertToDateTime(String dateTime) {
   if (dateTime != "")

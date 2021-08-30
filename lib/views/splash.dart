@@ -23,7 +23,7 @@ class _SplashState extends State<Splash> {
 
   startApp() async {
     return Timer(const Duration(seconds: 3), () {
-      Navigator.pushNamed(context, '/Workshops');
+      Navigator.pushNamed(context, '/Menu');
     });
   }
 

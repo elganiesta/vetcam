@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:vetcam/models/intervenant_model.dart';
 import 'package:vetcam/models/matiere_model.dart';
+import 'package:vetcam/models/moule_model.dart';
 
 import 'models/ordre_travail_model.dart';
 
@@ -11,6 +12,8 @@ class Boxes {
       Hive.box<IntervenantModel>('intervenants');
   static Box<MatiereModel> getMatieres() =>
       Hive.box<MatiereModel>('matieres');
+  static Box<MouleModel> getMoules() =>
+      Hive.box<MouleModel>('moules');
   static Box getIds() =>
       Hive.box('ids');
 }

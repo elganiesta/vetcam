@@ -4,8 +4,8 @@ import 'package:getwidget/getwidget.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vetcam/boxes.dart';
-import 'package:vetcam/controllers/matieres_controller.dart';
 import 'package:vetcam/models/matiere_model.dart';
+import 'package:vetcam/views/gestion_matieres/create.dart';
 
 class Matieres extends StatefulWidget {
   const Matieres({Key? key}) : super(key: key);
@@ -15,30 +15,6 @@ class Matieres extends StatefulWidget {
 }
 
 class _MatieresState extends State<Matieres> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _codeController;
-  late TextEditingController _designationController;
-  late TextEditingController _uniteController;
-  late TextEditingController _quantiteController;
-  late TextEditingController _prixUController;
-  late TextEditingController _observationController;
-
-  @override
-  void initState() {
-    _codeController = TextEditingController(text: "");
-    _designationController = TextEditingController(text: "");
-    _uniteController = TextEditingController(text: "");
-    _quantiteController = TextEditingController(text: "");
-    _prixUController = TextEditingController(text: "");
-    _observationController = TextEditingController(text: "");
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    Hive.box('matieres').close();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,123 +39,9 @@ class _MatieresState extends State<Matieres> {
                           context: context,
                           builder: (context) {
                             return Dialog(
+                              insetPadding: EdgeInsets.symmetric(horizontal: 400),
                               child: SingleChildScrollView(
-                                child: Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    children: [
-                                      Input(
-                                        hint: 'Code',
-                                        nomController: _codeController,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter some text';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      Input(
-                                        hint: 'Désignation',
-                                        nomController: _designationController,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter some text';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      Input(
-                                        hint: 'Unité',
-                                        nomController: _uniteController,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter some text';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      Input(
-                                        hint: 'Quantité',
-                                        nomController: _quantiteController,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter some text';
-                                          } else if (double.tryParse(value) ==
-                                              null) {
-                                            return 'Only numbers are allowed';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      Input(
-                                        hint: 'Prix Unitaire',
-                                        nomController: _prixUController,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter some text';
-                                          } else if (double.tryParse(value) ==
-                                              null) {
-                                            return 'Only numbers are allowed';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      Input(
-                                        hint: 'Observation',
-                                        nomController: _observationController,
-                                        validator: (value) {
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(
-                                        height: 20,
-                                      ),
-                                      Wrap(
-                                        children: [
-                                          GFButton(
-                                            text: "Enregistrer",
-                                            color: GFColors.SUCCESS,
-                                            onPressed: () async {
-                                              if (_formKey.currentState!
-                                                  .validate()) {
-                                                final id = getLastMatiereId();
-                                                final matiere = MatiereModel()
-                                                  ..id = id.toString()
-                                                  ..code = _codeController.text
-                                                  ..designation =
-                                                      _designationController
-                                                          .text
-                                                  ..unite =
-                                                      _uniteController.text
-                                                  ..quantite = double.parse(
-                                                      _quantiteController.text)
-                                                  ..prixU = double.parse(
-                                                      _prixUController.text)
-                                                  ..observation =
-                                                      _observationController
-                                                          .text;
-                                                await addMatiere(matiere);
-                                                await updateLastMatiereId(id);
-                                                _formKey.currentState!.reset();
-                                                Navigator.pop(context);
-                                              }
-                                            },
-                                          ),
-                                          const SizedBox(
-                                            width: 20,
-                                          ),
-                                          GFButton(
-                                            text: "Annuler",
-                                            color: GFColors.DANGER,
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                child: CreateMatiere(),
                               ),
                             );
                           });
@@ -253,37 +115,6 @@ class _MatieresState extends State<Matieres> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class Input extends StatelessWidget {
-  const Input({
-    Key? key,
-    required TextEditingController nomController,
-    required this.hint,
-    required this.validator,
-  })  : _nomController = nomController,
-        super(key: key);
-
-  final TextEditingController _nomController;
-  final String hint;
-  final String? Function(String?)? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12.0),
-      child: FractionallySizedBox(
-        widthFactor: 0.4,
-        child: TextFormField(
-          controller: _nomController,
-          decoration: InputDecoration(
-            hintText: hint,
-          ),
-          validator: validator,
         ),
       ),
     );

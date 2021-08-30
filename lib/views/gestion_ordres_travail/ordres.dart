@@ -20,12 +20,7 @@ class _OrdresTravailState extends State<OrdresTravail> {
   String _status = "EN COURS";
   String _search = "";
 
-  @override
-  void dispose() {
-    Hive.box('ordresTravail').close();
-    Hive.box('ids').close();
-    super.dispose();
-  }
+  List<OrdreTravailModel> _selectedOrdres = [];
 
   Map getStatus(OrdreTravailModel ordre) {
     Color color = GFColors.SUCCESS;
@@ -87,39 +82,27 @@ class _OrdresTravailState extends State<OrdresTravail> {
                         width: 10,
                       ),
                       GFButton(
-                        text: "Imprimer ordres en cours",
+                        text: "Imprimer les ordres séléctionnées",
                         color: GFColors.DARK,
                         onPressed: () {
-                          var ordres = Boxes.getOrdres()
-                              .values
-                              .toList()
-                              .cast<OrdreTravailModel>()
-                              .where((ordre) =>
-                                  getStatus(ordre)['text'] == 'EN COURS')
-                              .toList();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PreviewOrdreTravail(
-                                ordres: ordres,
+                          if(_selectedOrdres.length == 0) {
+                            showMessage(context, "Aucun ordre séléctionnées");
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PreviewOrdreTravail(
+                                  ordres: _selectedOrdres,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                     ],
                   ),
                   Row(
                     children: [
-                      GFButton(
-                        text: "Produits",
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/Matieres');
-                        },
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
                       GFButton(
                         text: "Intervenants",
                         onPressed: () {
@@ -198,6 +181,17 @@ class _OrdresTravailState extends State<OrdresTravail> {
                             bool _isCompleted =
                                 getStatus(ordre)['text'] == "COMPLETED";
                             return DataRow(
+                              selected: _selectedOrdres.contains(ordre),
+                              onSelectChanged: (value) {
+                                setState(() {
+                                  final isAdding =
+                                      value != null && value;
+                  
+                                  isAdding
+                                      ? _selectedOrdres.add(ordre)
+                                      : _selectedOrdres.remove(ordre);
+                                });
+                              },
                               cells: <DataCell>[
                                 DataCell(Text(ordre.id)),
                                 DataCell(Container(
