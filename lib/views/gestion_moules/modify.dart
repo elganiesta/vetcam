@@ -20,6 +20,8 @@ class _ModifyMouleState extends State<ModifyMoule> {
   final TextEditingController _nbrController = TextEditingController(text: "0");
   final TextEditingController _rebutController =
       TextEditingController(text: "");
+  final TextEditingController _receptionController =
+      TextEditingController(text: "");
   late String _statusSelected;
   late MouleModel _moule;
 
@@ -43,6 +45,9 @@ class _ModifyMouleState extends State<ModifyMoule> {
         ..status = _statusSelected;
       if (_rebutController.text != "") {
         _moule.rebut = convertToDateTime(_rebutController.text);
+      }
+      if (_receptionController.text != "") {
+        _moule.reception = convertToDateTime(_receptionController.text);
       }
       await _moule.save();
       _formKey.currentState!.reset();
@@ -88,6 +93,19 @@ class _ModifyMouleState extends State<ModifyMoule> {
               }
               return null;
             },
+          ),
+          Padding(
+            padding: EdgeInsets.all(12.0),
+            child: DateTimePicker(
+              type: DateTimePickerType.dateTime,
+              dateMask: 'd/MM/yyyy HH:mm',
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              icon: Icon(Icons.event),
+              dateLabelText: 'Date de réception',
+              timeLabelText: "Hour",
+              controller: _receptionController,
+            ),
           ),
           Padding(
             padding: EdgeInsets.all(12.0),

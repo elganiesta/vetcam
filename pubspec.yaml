@@ -13,7 +13,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.2
-  syncfusion_flutter_xlsio: ^19.2.56-beta
+  excel: 2.0.0-null-safety-3
   hive: ^2.0.4
   hive_flutter: ^1.1.0
   provider: ^5.0.0

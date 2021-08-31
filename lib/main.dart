@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vetcam/models/besoinItem_model.dart';
+import 'package:vetcam/models/besoin_model.dart';
 import 'package:vetcam/models/moule_model.dart';
+import 'package:vetcam/models/produit_model.dart';
 import 'models/ordre_travail_model.dart';
 import 'models/intervenant_model.dart';
 import 'models/matiere_model.dart';
@@ -14,11 +17,17 @@ void main() async {
   Hive.registerAdapter(IntervenantModelAdapter());
   Hive.registerAdapter(MatiereModelAdapter());
   Hive.registerAdapter(MouleModelAdapter());
-  // await Hive.deleteBoxFromDisk('moules');
+  Hive.registerAdapter(BesoinModelAdapter());
+  Hive.registerAdapter(BesoinItemAdapter());
+  Hive.registerAdapter(ProduitModelAdapter());
+  // await Hive.deleteBoxFromDisk('besoins');
+  await Hive.deleteBoxFromDisk('moules');
   await Hive.openBox<OrdreTravailModel>('ordresTravail');
   await Hive.openBox<IntervenantModel>('intervenants');
   await Hive.openBox<MatiereModel>('matieres');
   await Hive.openBox<MouleModel>('moules');
+  await Hive.openBox<BesoinModel>('besoins');
+  await Hive.openBox<ProduitModel>('produits');
   await Hive.openBox('ids');
   runApp(const MyApp());
 }

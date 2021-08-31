@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vetcam/boxes.dart';
 import 'package:vetcam/const.dart';
+import 'package:vetcam/controllers/excel_import.dart';
 import 'package:vetcam/models/moule_model.dart';
 
 import 'create.dart';
@@ -21,7 +22,6 @@ class _MoulesState extends State<Moules> {
   String _uniteSelected = sections[0];
 
   Color getStatus(MouleModel moule) {
-
     switch (moule.status) {
       case "NEUF":
         return GFColors.SECONDARY;
@@ -32,7 +32,7 @@ class _MoulesState extends State<Moules> {
       case "USE":
         return GFColors.DARK;
       default:
-      return GFColors.PRIMARY;
+        return GFColors.PRIMARY;
     }
   }
 
@@ -70,21 +70,35 @@ class _MoulesState extends State<Moules> {
                       });
                     },
                   ),
-                  GFButton(
-                    text: "Ajouter nouveau moule",
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return Dialog(
-                              insetPadding:
-                                  EdgeInsets.symmetric(horizontal: 400),
-                              child: SingleChildScrollView(
-                                child: AddMoule(),
-                              ),
-                            );
-                          });
-                    },
+                  Row(
+                    children: [
+                      GFButton(
+                        text: "Importer fichier excel",
+                        color: GFColors.SECONDARY,
+                        onPressed: () async {
+                          await loadMoulesData();
+                        },
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      GFButton(
+                        text: "Ajouter nouveau moule",
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return Dialog(
+                                  insetPadding:
+                                      EdgeInsets.symmetric(horizontal: 400),
+                                  child: SingleChildScrollView(
+                                    child: AddMoule(),
+                                  ),
+                                );
+                              });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -100,96 +114,108 @@ class _MoulesState extends State<Moules> {
                       .where(
                           (moule) => moule.unite.compareTo(_uniteSelected) == 0)
                       .toList();
-                  return DataTable(
-                    headingRowColor: MaterialStateColor.resolveWith(
-                        (states) => Colors.blueGrey[100] as Color),
-                    headingTextStyle: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.black),
-                    columns: [
-                      DataColumn(label: Text('Actions')),
-                      DataColumn(label: Text('Numero')),
-                      DataColumn(label: Text('Nom')),
-                      DataColumn(label: Text('Marque')),
-                      DataColumn(label: Text('Planches')),
-                      DataColumn(label: Text('Status')),
-                      DataColumn(label: Text('Réception')),
-                      DataColumn(label: Text('Debut')),
-                      DataColumn(label: Text('Modifié le',)),
-                      DataColumn(label: Text('Rebut')),
-                      DataColumn(label: Text('Seuil')),
-                    ],
-                    rows: moules
-                        .map(
-                          (moule) {
-                            return DataRow(
-                              cells: <DataCell>[
-                                DataCell(
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        GFIconButton(
-                                          tooltip: "Modifier",
-                                          color: GFColors.INFO,
-                                          size: GFSize.SMALL,
-                                          icon: Icon(Icons.edit),
-                                          onPressed: () async {
-                                            showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  return Dialog(
-                                                    insetPadding:
-                                                        EdgeInsets.symmetric(
-                                                            horizontal: 400),
-                                                    child:
-                                                        SingleChildScrollView(
-                                                      child: ModifyMoule(
-                                                        moule: moule,
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 40,
+                      headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.blueGrey[100] as Color),
+                      headingTextStyle: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.black),
+                      columns: [
+                        DataColumn(label: Text('Actions')),
+                        DataColumn(label: Text('Numero')),
+                        DataColumn(label: Text('Nom')),
+                        // DataColumn(label: Text('Marque')),
+                        DataColumn(label: Text('Planches')),
+                        DataColumn(label: Text('Status')),
+                        DataColumn(label: Text('Réception')),
+                        DataColumn(label: Text('Debut')),
+                        DataColumn(
+                            label: Text(
+                          'Modifié le',
+                        )),
+                        DataColumn(label: Text('Rebut')),
+                        DataColumn(label: Text('Seuil')),
+                      ],
+                      rows: moules
+                          .map(
+                            (moule) {
+                              return DataRow(
+                                cells: <DataCell>[
+                                  DataCell(
+                                    Container(
+                                      child: Row(
+                                        children: [
+                                          GFIconButton(
+                                            tooltip: "Modifier",
+                                            color: GFColors.INFO,
+                                            size: GFSize.SMALL,
+                                            icon: Icon(Icons.edit),
+                                            onPressed: () async {
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return Dialog(
+                                                      insetPadding:
+                                                          EdgeInsets.symmetric(
+                                                              horizontal: 400),
+                                                      child:
+                                                          SingleChildScrollView(
+                                                        child: ModifyMoule(
+                                                          moule: moule,
+                                                        ),
                                                       ),
-                                                    ),
-                                                  );
-                                                });
-                                          },
-                                        ),
-                                        SizedBox(
-                                          width: 5,
-                                        ),
-                                        GFIconButton(
-                                          tooltip: "Supprimer",
-                                          color: GFColors.DANGER,
-                                          size: GFSize.SMALL,
-                                          icon: Icon(Icons.delete),
-                                          onPressed: () async {
-                                            await moule.delete();
-                                          },
-                                        ),
-                                      ],
+                                                    );
+                                                  });
+                                            },
+                                          ),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          GFIconButton(
+                                            tooltip: "Supprimer",
+                                            color: GFColors.DANGER,
+                                            size: GFSize.SMALL,
+                                            icon: Icon(Icons.delete),
+                                            onPressed: () async {
+                                              await moule.delete();
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                DataCell(Text(moule.numero)),
-                                DataCell(Text(moule.nom)),
-                                DataCell(Text(moule.marque)),
-                                DataCell(
-                                    Text(moule.planches.toStringAsFixed(0))),
-                                    DataCell(SizedBox(
-                                  width: 100,
-                                  child: GFBadge(
-                                    text: moule.status,
-                                    size: GFSize.MEDIUM,
-                                    color: getStatus(moule),
+                                  DataCell(Text(moule.numero)),
+                                  DataCell(Text(moule.nom)),
+                                  // DataCell(Text(moule.marque)),
+                                  DataCell(
+                                      Text(moule.planches.toStringAsFixed(0))),
+                                  DataCell(SizedBox(
+                                    width: 100,
+                                    child: GFBadge(
+                                      text: moule.status,
+                                      size: GFSize.MEDIUM,
+                                      color: getStatus(moule),
+                                    ),
+                                  )),
+                                  DataCell(Text(moule.reception)),
+                                  DataCell(
+                                      Text(moule.miseEnService.toString())),
+                                  DataCell(Text(
+                                      moule.derniereUtilisation.toString())),
+                                  DataCell(
+                                    Text(moule.rebut.toString()),
                                   ),
-                                )),
-                                DataCell(Text(moule.reception)),
-                                DataCell(Text(moule.miseEnService.toString())),
-                                DataCell(Text(moule.derniereUtilisation.toString())),
-                                DataCell(Text(moule.rebut.toString()),),
-                                DataCell(Text(moule.seuil.toStringAsFixed(0))),
-                              ],
-                            );
-                          },
-                        )
-                        .toList()
-                        .cast<DataRow>(),
+                                  DataCell(
+                                      Text(moule.seuil.toStringAsFixed(0))),
+                                ],
+                              );
+                            },
+                          )
+                          .toList()
+                          .cast<DataRow>(),
+                    ),
                   );
                 },
               ),

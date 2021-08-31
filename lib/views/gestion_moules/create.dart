@@ -130,9 +130,7 @@ class _AddMouleState extends State<AddMoule> {
                 text: "Enregistrer",
                 color: GFColors.SUCCESS,
                 onPressed: () async {
-                  if(_receptionController.text == "") {
-                    showMessage(context, "Date réception est obligatoire.");
-                  } else if (_formKey.currentState!.validate()) {
+                  if (_formKey.currentState!.validate()) {
                     final id = getLastMouleId();
                     final moule = MouleModel()
                       ..id = id.toString()
@@ -141,12 +139,15 @@ class _AddMouleState extends State<AddMoule> {
                       ..marque = _marqueController.text
                       ..planches = 0
                       ..status = statusMoules[0]
-                      ..reception = convertToDateTime(_receptionController.text)
+                      ..reception = ""
                       ..miseEnService = ""
                       ..derniereUtilisation = ""
                       ..rebut = ""
                       ..seuil = double.parse(_seuilController.text)
                       ..unite = _sectionSelected;
+                    if(_receptionController.text != "") {
+                      moule.reception = convertToDateTime(_receptionController.text);
+                    }
                     await addMoule(moule);
                     await updateLastMouleId(id);
                     _formKey.currentState!.reset();

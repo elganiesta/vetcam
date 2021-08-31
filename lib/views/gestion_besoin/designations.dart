@@ -4,25 +4,25 @@ import 'package:getwidget/getwidget.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vetcam/boxes.dart';
-import 'package:vetcam/controllers/intervenants_controller.dart';
-import 'package:vetcam/models/intervenant_model.dart';
+import 'package:vetcam/controllers/produits_controller.dart';
+import 'package:vetcam/models/produit_model.dart';
 
-class Intervenants extends StatefulWidget {
-  const Intervenants({Key? key}) : super(key: key);
+class Designations extends StatefulWidget {
+  const Designations({Key? key}) : super(key: key);
 
   @override
-  _IntervenantsState createState() => _IntervenantsState();
+  _DesignationsState createState() => _DesignationsState();
 }
 
-class _IntervenantsState extends State<Intervenants> {
+class _DesignationsState extends State<Designations> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nomController;
-  late TextEditingController _fonctionController;
+  late TextEditingController _typeController;
 
   @override
   void initState() {
     _nomController = TextEditingController(text: "");
-    _fonctionController = TextEditingController(text: "");
+    _typeController = TextEditingController(text: "");
     super.initState();
   }
 
@@ -32,7 +32,7 @@ class _IntervenantsState extends State<Intervenants> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         backgroundColor: GFColors.DARK,
-        title: const Text("Intervenants"),
+        title: const Text("Designations"),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -43,7 +43,7 @@ class _IntervenantsState extends State<Intervenants> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   GFButton(
-                    text: "Ajouter un intervenant",
+                    text: "Ajouter un produits",
                     onPressed: () {
                       showDialog(
                           context: context,
@@ -80,9 +80,9 @@ class _IntervenantsState extends State<Intervenants> {
                                         child: FractionallySizedBox(
                                           widthFactor: 0.4,
                                           child: TextFormField(
-                                            controller: _fonctionController,
+                                            controller: _typeController,
                                             decoration: InputDecoration(
-                                              hintText: 'Fonction',
+                                              hintText: 'Type',
                                             ),
                                             validator: (value) {
                                               if (value == null ||
@@ -105,18 +105,13 @@ class _IntervenantsState extends State<Intervenants> {
                                             onPressed: () async {
                                               if (_formKey.currentState!
                                                   .validate()) {
-                                                final id = getLastIntervId();
-                                                final intervenant =
-                                                    IntervenantModel()
-                                                      ..id = id.toString()
-                                                      ..nom =
-                                                          _nomController.text
-                                                      ..fonction =
-                                                          _fonctionController
-                                                              .text;
-                                                await addIntervenant(
-                                                    intervenant);
-                                                await updateLastInterId(id);
+                                                final id = getLastProduitId();
+                                                final produit = ProduitModel()
+                                                  ..id = id.toString()
+                                                  ..nom = _nomController.text
+                                                  ..type = _typeController.text;
+                                                await addProduit(produit);
+                                                await updateLastProduitId(id);
                                                 _formKey.currentState!.reset();
                                                 Navigator.pop(context);
                                               }
@@ -148,10 +143,10 @@ class _IntervenantsState extends State<Intervenants> {
                 height: 20,
               ),
               ValueListenableBuilder(
-                valueListenable: Boxes.getIntervenants().listenable(),
-                builder: (BuildContext context, Box<IntervenantModel> box, _) {
-                  final intervenants =
-                      box.values.toList().cast<IntervenantModel>().toList();
+                valueListenable: Boxes.getProduits().listenable(),
+                builder: (BuildContext context, Box<ProduitModel> box, _) {
+                  final designations =
+                      box.values.toList().cast<ProduitModel>().toList();
                   return DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
                         (states) => Colors.blueGrey[100] as Color),
@@ -161,39 +156,36 @@ class _IntervenantsState extends State<Intervenants> {
                       DataColumn(label: Text('N°')),
                       DataColumn(label: Text('ACTIONS')),
                       DataColumn(label: Text('NOM')),
-                      DataColumn(label: Text('FONCTION')),
+                      DataColumn(label: Text('TYPE')),
                     ],
-                    rows: intervenants
-                        .map(
-                          (intervenant) {
-                            return DataRow(
-                              cells: <DataCell>[
-                                DataCell(Text(intervenant.id)),
-                                DataCell(
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        GFIconButton(
-                                          tooltip: "Supprimer",
-                                          color: GFColors.DANGER,
-                                          size: GFSize.SMALL,
-                                          icon: Icon(Icons.delete),
-                                          onPressed: () async {
-                                            await intervenant.delete();
-                                          },
-                                        ),
-                                      ],
+                    rows: designations.map(
+                      (produit) {
+                        return DataRow(
+                          cells: <DataCell>[
+                            DataCell(Text(produit.id)),
+                            DataCell(
+                              Container(
+                                child: Row(
+                                  children: [
+                                    GFIconButton(
+                                      tooltip: "Supprimer",
+                                      color: GFColors.DANGER,
+                                      size: GFSize.SMALL,
+                                      icon: Icon(Icons.delete),
+                                      onPressed: () async {
+                                        await produit.delete();
+                                      },
                                     ),
-                                  ),
+                                  ],
                                 ),
-                                DataCell(Text(intervenant.nom)),
-                                DataCell(Text(intervenant.fonction)),
-                              ],
-                            );
-                          },
-                        )
-                        .toList()
-                        .cast<DataRow>(),
+                              ),
+                            ),
+                            DataCell(Text(produit.nom)),
+                            DataCell(Text(produit.type)),
+                          ],
+                        );
+                      },
+                    ).toList().cast<DataRow>(),
                   );
                 },
               ),
