@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -34,14 +35,16 @@ List<String> sections = ['ALPHA', 'TENSYLAND', 'NOVABLOC'];
 List<String> statusMoules = ['NEUF', 'EN BONNE ETAT', 'REPARE', 'USE'];
 
 String convertToDateTime(String dateTime) {
-  if (dateTime != "")
-    return DateFormat('d/M/y HH:mm').format(DateTime.parse(dateTime));
+  if (dateTime != "") {
+    print(dateTime);
+    return DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(dateTime));
+  }
   return "";
 }
 
 String regularDateTime(String dateTime) {
-  final DateFormat displayFormater = DateFormat('d/M/y HH:mm');
-  final DateFormat serverFormater = DateFormat('yyyy-MM-d HH:mm:ss.S');
+  final DateFormat displayFormater = DateFormat('dd/MM/yyyy HH:mm');
+  final DateFormat serverFormater = DateFormat('yyyy-MM-dd HH:mm:ss.S');
   if(dateTime != "") {
     final DateTime displayDate = displayFormater.parse(dateTime);
     final String formatted = serverFormater.format(displayDate);

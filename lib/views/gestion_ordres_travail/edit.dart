@@ -526,7 +526,7 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                         children: [
                           Padding(
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 400.0),
+                                const EdgeInsets.symmetric(horizontal: 300.0),
                             child: Wrap(
                               children: [
                                 DropdownButton<OptionItem>(
@@ -649,6 +649,7 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                                 FractionallySizedBox(
                                   widthFactor: 0.5,
                                   child: DropdownButton<OptionItem>(
+                                    isExpanded: true,
                                     items: _matieres
                                         .map((matiere) {
                                           return DropdownMenuItem<OptionItem>(
@@ -752,9 +753,32 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                               text: matiere.item.unite,
                               title: false,
                             ),
-                            CellTitle(
-                              text: matiere.item.quantite.toString(),
-                              title: false,
+                            Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: TextFormField(
+                                initialValue: matiere.item.quantite.toString(),
+                                decoration: InputDecoration(
+                                  hintText: 'Quantité..',
+                                ),
+                                onChanged: (val) {
+                                  setState(() {
+                                    try {
+                                      matiere.item.quantite =
+                                          double.tryParse(val);
+                                    } catch (e) {
+                                      matiere.item.quantite = 0.0;
+                                    }
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter some text';
+                                  } else if (double.tryParse(value) == null) {
+                                    return 'Only numbers are allowed';
+                                  }
+                                  return null;
+                                },
+                              ),
                             ),
                             CellTitle(
                               text: matiere.item.prixU.toString() + ' DH',
@@ -829,9 +853,10 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                                         if (modifiable) {
                                           setState(() {
                                             piece.isSelected = value as bool;
-                                            if(piece.item == "AUTRE" && value == false) {
-                                            _autrePiece = "";
-                                          }
+                                            if (piece.item == "AUTRE" &&
+                                                value == false) {
+                                              _autrePiece = "";
+                                            }
                                           });
                                         }
                                       },
@@ -856,8 +881,10 @@ class _EditOrdreTravailState extends State<EditOrdreTravail> {
                                               hintText: 'Tapez ici..',
                                             ),
                                             validator: (value) {
-                                              if (piece.item == "AUTRE" && piece.isSelected) {
-                                                if(value == null || value.isEmpty) {
+                                              if (piece.item == "AUTRE" &&
+                                                  piece.isSelected) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
                                                   return 'Please enter some text';
                                                 }
                                               }

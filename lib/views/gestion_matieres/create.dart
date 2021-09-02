@@ -17,7 +17,7 @@ class _CreateMatiereState extends State<CreateMatiere> {
   TextEditingController _designationController =
       TextEditingController(text: "");
   TextEditingController _uniteController = TextEditingController(text: "");
-  TextEditingController _quantiteController = TextEditingController(text: "");
+  // TextEditingController _quantiteController = TextEditingController(text: "");
   TextEditingController _prixUController = TextEditingController(text: "");
   TextEditingController _observationController =
       TextEditingController(text: "");
@@ -58,18 +58,18 @@ class _CreateMatiereState extends State<CreateMatiere> {
               return null;
             },
           ),
-          Input(
-            hint: 'Quantité',
-            nomController: _quantiteController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              } else if (double.tryParse(value) == null) {
-                return 'Only numbers are allowed';
-              }
-              return null;
-            },
-          ),
+          // Input(
+          //   hint: 'Quantité',
+          //   nomController: _quantiteController,
+          //   validator: (value) {
+          //     if (value == null || value.isEmpty) {
+          //       return 'Please enter some text';
+          //     } else if (double.tryParse(value) == null) {
+          //       return 'Only numbers are allowed';
+          //     }
+          //     return null;
+          //   },
+          // ),
           Input(
             hint: 'Prix Unitaire',
             nomController: _prixUController,
@@ -105,7 +105,7 @@ class _CreateMatiereState extends State<CreateMatiere> {
                       ..code = _codeController.text
                       ..designation = _designationController.text
                       ..unite = _uniteController.text
-                      ..quantite = double.parse(_quantiteController.text)
+                      ..quantite = 0
                       ..prixU = double.parse(_prixUController.text)
                       ..observation = _observationController.text;
                     await addMatiere(matiere);

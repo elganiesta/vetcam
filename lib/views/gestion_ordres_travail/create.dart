@@ -27,10 +27,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
   late List<OptionItem> _unites;
   late List<OptionItem> _types;
   late List<OptionItem> _pieces;
-  late List<OptionItem> _intervenants;
-  late OptionItem _intervSelected;
-  late List<OptionItem> _matieres;
-  late OptionItem _matiereSelected;
+  List<OptionItem>? _intervenants;
+  OptionItem? _intervSelected;
+  List<OptionItem>? _matieres;
+  OptionItem? _matiereSelected;
 
   late TextEditingController _debutController;
   late TextEditingController _finController;
@@ -50,13 +50,18 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
         .map((intervenant) => OptionItem(intervenant))
         .toList()
         .cast<OptionItem>();
-    if (_intervenants.length != 0) _intervSelected = _intervenants[0];
+    if (_intervenants?.length != 0) _intervSelected = _intervenants?[0];
     _matieres = Boxes.getMatieres()
         .values
         .map((matiere) => OptionItem(matiere))
         .toList()
         .cast<OptionItem>();
-    if (_matieres.length != 0) _matiereSelected = _matieres[0];
+    if (_matieres?.length != 0) {
+      _matiereSelected = _matieres?[0];
+      _matieres
+          ?.sort((a, b) => a.item.designation.compareTo(b.item.designation));
+    }
+    ;
 
     _unites =
         unites.map((unite) => OptionItem(unite)).toList().cast<OptionItem>();
@@ -102,10 +107,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
     bool _uniteIsValid = _unites
         .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
         .isSelected;
-    bool _intervIsValid = _intervenants
+    bool _intervIsValid = _intervenants!
         .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
         .isSelected;
-    bool _matiereIsValid = _matieres
+    bool _matiereIsValid = _matieres!
         .firstWhere((e) => e.isSelected == true, orElse: () => OptionItem(""))
         .isSelected;
     if (_pieceIsValid &&
@@ -125,13 +130,13 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
       if (e.isSelected == true) return e.item;
     }).toList();
     List<IntervenantModel> _intervenantsList = [];
-    _intervenants.forEach((e) {
+    _intervenants?.forEach((e) {
       if (e.isSelected) {
         _intervenantsList.add(e.item);
       }
     });
     List<MatiereModel> _matieresList = [];
-    _matieres.forEach((e) {
+    _matieres?.forEach((e) {
       if (e.isSelected) {
         _matieresList.add(e.item);
       }
@@ -306,9 +311,9 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                           });
                                           unite.isSelected = value as bool;
                                           if (unite.item != "AUTRE" &&
-                                                value == true) {
-                                              _autreUnite = "";
-                                            }
+                                              value == true) {
+                                            _autreUnite = "";
+                                          }
                                         });
                                       },
                                     ),
@@ -330,8 +335,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                               hintText: 'Tapez ici..',
                                             ),
                                             validator: (value) {
-                                              if (unite.item == "AUTRE" && unite.isSelected) {
-                                                if(value == null || value.isEmpty) {
+                                              if (unite.item == "AUTRE" &&
+                                                  unite.isSelected) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
                                                   return 'Please enter some text';
                                                 }
                                               }
@@ -378,9 +385,9 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                         setState(() {
                                           type.isSelected = value as bool;
                                           if (type.item == "AUTRE" &&
-                                                value == false) {
-                                              _autreType = "";
-                                            }
+                                              value == false) {
+                                            _autreType = "";
+                                          }
                                         });
                                       },
                                     ),
@@ -401,8 +408,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                               hintText: 'Tapez ici..',
                                             ),
                                             validator: (value) {
-                                              if (type.item == "AUTRE" && type.isSelected) {
-                                                if(value == null || value.isEmpty) {
+                                              if (type.item == "AUTRE" &&
+                                                  type.isSelected) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
                                                   return 'Please enter some text';
                                                 }
                                               }
@@ -472,66 +481,78 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         Padding(
                           padding:
                               const EdgeInsets.symmetric(horizontal: 300.0),
-                          child: Wrap(
-                            children: [
-                              DropdownButton<OptionItem>(
-                                items: _intervenants
-                                    .map((intervenant) {
-                                      return DropdownMenuItem<OptionItem>(
-                                        child: Text(intervenant.item.nom),
-                                        value: intervenant,
-                                      );
-                                    })
-                                    .toList()
-                                    .cast<DropdownMenuItem<OptionItem>>(),
-                                value: _intervSelected,
-                                onChanged: (dynamic val) {
-                                  setState(() {
-                                    _intervSelected = val;
-                                  });
-                                },
-                              ),
-                              SizedBox(
-                                width: 50,
-                              ),
-                              FractionallySizedBox(
-                                widthFactor: 1 / 3,
-                                child: GFButton(
-                                  text: "Ajouter",
-                                  onPressed: () {
-                                    setState(() {
-                                      _intervenants.forEach((e) {
-                                        if (e.item.id ==
-                                            _intervSelected.item.id) {
-                                          e.isSelected = true;
-                                        }
-                                      });
-                                    });
-                                  },
+                          child: _intervSelected == null
+                              ? Center(
+                                  child: GFButton(
+                                    color: GFColors.PRIMARY,
+                                    size: GFSize.SMALL,
+                                    text: 'Ajouter des intervenants',
+                                    onPressed: () {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/Intervenants');
+                                    },
+                                  ),
+                                )
+                              : Wrap(
+                                  children: [
+                                    DropdownButton<OptionItem>(
+                                      items: _intervenants!
+                                          .map((intervenant) {
+                                            return DropdownMenuItem<OptionItem>(
+                                              child: Text(intervenant.item.nom),
+                                              value: intervenant,
+                                            );
+                                          })
+                                          .toList()
+                                          .cast<DropdownMenuItem<OptionItem>>(),
+                                      value: _intervSelected,
+                                      onChanged: (dynamic val) {
+                                        setState(() {
+                                          _intervSelected = val;
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    FractionallySizedBox(
+                                      widthFactor: 1 / 3,
+                                      child: GFButton(
+                                        text: "Ajouter",
+                                        onPressed: () {
+                                          setState(() {
+                                            _intervenants?.forEach((e) {
+                                              if (e.item.id ==
+                                                  _intervSelected?.item.id) {
+                                                e.isSelected = true;
+                                              }
+                                            });
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    FractionallySizedBox(
+                                      widthFactor: 1 / 3,
+                                      child: GFButton(
+                                        text: "Supprimer",
+                                        color: GFColors.DANGER,
+                                        onPressed: () {
+                                          setState(() {
+                                            _intervenants?.forEach((e) {
+                                              if (e.item.id ==
+                                                  _intervSelected?.item.id) {
+                                                e.isSelected = false;
+                                              }
+                                            });
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              FractionallySizedBox(
-                                widthFactor: 1 / 3,
-                                child: GFButton(
-                                  text: "Supprimer",
-                                  color: GFColors.DANGER,
-                                  onPressed: () {
-                                    setState(() {
-                                      _intervenants.forEach((e) {
-                                        if (e.item.id ==
-                                            _intervSelected.item.id) {
-                                          e.isSelected = false;
-                                        }
-                                      });
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
                         )
                       ],
                     ),
@@ -551,7 +572,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         CellTitle(text: 'VISA'),
                       ],
                     ),
-                    for (var intervenant in _intervenants)
+                    for (var intervenant in _intervenants!)
                       if (intervenant.isSelected)
                         TableRow(
                           children: [
@@ -587,69 +608,85 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: Wrap(
-                            children: [
-                              FractionallySizedBox(
-                                widthFactor: 0.5,
-                                child: DropdownButton<OptionItem>(
-                                  items: _matieres
-                                      .map((matiere) {
-                                        return DropdownMenuItem<OptionItem>(
-                                          child: Text(matiere.item.designation),
-                                          value: matiere,
-                                        );
-                                      })
-                                      .toList()
-                                      .cast<DropdownMenuItem<OptionItem>>(),
-                                  value: _matiereSelected,
-                                  onChanged: (dynamic val) {
-                                    setState(() {
-                                      _matiereSelected = val;
-                                    });
-                                  },
+                          child: _matiereSelected == null
+                              ? Center(
+                                  child: GFButton(
+                                    color: GFColors.PRIMARY,
+                                    size: GFSize.SMALL,
+                                    text: 'Ajouter des matières',
+                                    onPressed: () {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/Matieres');
+                                    },
+                                  ),
+                                )
+                              : Wrap(
+                                  children: [
+                                    FractionallySizedBox(
+                                      widthFactor: 0.5,
+                                      child: DropdownButton<OptionItem>(
+                                        isExpanded: true,
+                                        items: _matieres!
+                                            .map((matiere) {
+                                              return DropdownMenuItem<
+                                                  OptionItem>(
+                                                child: Text(
+                                                    matiere.item.designation),
+                                                value: matiere,
+                                              );
+                                            })
+                                            .toList()
+                                            .cast<
+                                                DropdownMenuItem<OptionItem>>(),
+                                        value: _matiereSelected,
+                                        onChanged: (dynamic val) {
+                                          setState(() {
+                                            _matiereSelected = val;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    FractionallySizedBox(
+                                      widthFactor: 0.2,
+                                      child: GFButton(
+                                        text: "Ajouter",
+                                        onPressed: () {
+                                          setState(() {
+                                            _matieres?.forEach((e) {
+                                              if (e.item.code ==
+                                                  _matiereSelected?.item.code) {
+                                                e.isSelected = true;
+                                              }
+                                            });
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    FractionallySizedBox(
+                                      widthFactor: 0.2,
+                                      child: GFButton(
+                                        text: "Supprimer",
+                                        color: GFColors.DANGER,
+                                        onPressed: () {
+                                          setState(() {
+                                            _matieres?.forEach((e) {
+                                              if (e.item.code ==
+                                                  _matiereSelected?.item.code) {
+                                                e.isSelected = false;
+                                              }
+                                            });
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              SizedBox(
-                                width: 50,
-                              ),
-                              FractionallySizedBox(
-                                widthFactor: 0.2,
-                                child: GFButton(
-                                  text: "Ajouter",
-                                  onPressed: () {
-                                    setState(() {
-                                      _matieres.forEach((e) {
-                                        if (e.item.code ==
-                                            _matiereSelected.item.code) {
-                                          e.isSelected = true;
-                                        }
-                                      });
-                                    });
-                                  },
-                                ),
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              FractionallySizedBox(
-                                widthFactor: 0.2,
-                                child: GFButton(
-                                  text: "Supprimer",
-                                  color: GFColors.DANGER,
-                                  onPressed: () {
-                                    setState(() {
-                                      _matieres.forEach((e) {
-                                        if (e.item.code ==
-                                            _matiereSelected.item.code) {
-                                          e.isSelected = false;
-                                        }
-                                      });
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
                         )
                       ],
                     ),
@@ -674,7 +711,7 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                         CellTitle(text: 'Observation'),
                       ],
                     ),
-                    for (var matiere in _matieres)
+                    for (var matiere in _matieres!)
                       if (matiere.isSelected)
                         TableRow(
                           children: [
@@ -694,9 +731,31 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                               text: matiere.item.unite,
                               title: false,
                             ),
-                            CellTitle(
-                              text: matiere.item.quantite.toString(),
-                              title: false,
+                            Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  hintText: 'Quantité..',
+                                ),
+                                onChanged: (val) {
+                                  setState(() {
+                                    try {
+                                      matiere.item.quantite =
+                                          double.tryParse(val);
+                                    } catch (e) {
+                                      matiere.item.quantite = 0.0;
+                                    }
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter some text';
+                                  } else if (double.tryParse(value) == null) {
+                                    return 'Only numbers are allowed';
+                                  }
+                                  return null;
+                                },
+                              ),
                             ),
                             CellTitle(
                               text: matiere.item.prixU.toString() + ' DH',
@@ -727,12 +786,19 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                       children: [
                         CellTitle(text: 'TOTAL'),
                         CellTitle(
-                          text: _matieres
-                              .map((e) {
-                                if(e.isSelected) return e.item.prixU * e.item.quantite;
-                                else return 0;
-                              })
-                              .reduce((value, element) => value + element).toString() + ' DH',
+                          text: _matieres?.length != 0
+                              ? _matieres!
+                                      .map((e) {
+                                        if (e.isSelected)
+                                          return e.item.prixU * e.item.quantite;
+                                        else
+                                          return 0;
+                                      })
+                                      .reduce(
+                                          (value, element) => value + element)
+                                      .toString() +
+                                  ' DH'
+                              : '0',
                           title: false,
                         ),
                       ],
@@ -766,7 +832,8 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                       onChanged: (bool? value) {
                                         setState(() {
                                           piece.isSelected = value as bool;
-                                          if(piece.item == "AUTRE" && value == false) {
+                                          if (piece.item == "AUTRE" &&
+                                              value == false) {
                                             _autrePiece = "";
                                           }
                                         });
@@ -790,8 +857,10 @@ class _CreateOrdreTravailState extends State<CreateOrdreTravail> {
                                               hintText: 'Tapez ici..',
                                             ),
                                             validator: (value) {
-                                              if (piece.item == "AUTRE" && piece.isSelected) {
-                                                if(value == null || value.isEmpty) {
+                                              if (piece.item == "AUTRE" &&
+                                                  piece.isSelected) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
                                                   return 'Please enter some text';
                                                 }
                                               }

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:vetcam/models/besoinItem_model.dart';
 import 'package:vetcam/models/besoin_model.dart';
 import 'package:vetcam/models/moule_model.dart';
@@ -11,7 +14,8 @@ import 'route_generator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
+  Directory appDocDir = await getApplicationDocumentsDirectory();
+  await Hive.initFlutter(appDocDir.path + '/vetcam data');
 
   Hive.registerAdapter(OrdreTravailModelAdapter());
   Hive.registerAdapter(IntervenantModelAdapter());
@@ -20,8 +24,6 @@ void main() async {
   Hive.registerAdapter(BesoinModelAdapter());
   Hive.registerAdapter(BesoinItemAdapter());
   Hive.registerAdapter(ProduitModelAdapter());
-  // await Hive.deleteBoxFromDisk('besoins');
-  await Hive.deleteBoxFromDisk('moules');
   await Hive.openBox<OrdreTravailModel>('ordresTravail');
   await Hive.openBox<IntervenantModel>('intervenants');
   await Hive.openBox<MatiereModel>('matieres');

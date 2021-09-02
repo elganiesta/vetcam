@@ -161,6 +161,7 @@ class _OrdresTravailState extends State<OrdresTravail> {
                   ordres.sort((a, b) => regularDateTime(b.dateTimeDebut)
                       .compareTo(regularDateTime(a.dateTimeDebut)));
                   return DataTable(
+                    columnSpacing: 30,
                     headingRowColor: MaterialStateColor.resolveWith(
                         (states) => Colors.blueGrey[100] as Color),
                     headingTextStyle: const TextStyle(

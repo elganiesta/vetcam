@@ -4,6 +4,7 @@ import 'package:getwidget/getwidget.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vetcam/boxes.dart';
+import 'package:vetcam/controllers/excel_import.dart';
 import 'package:vetcam/models/matiere_model.dart';
 import 'package:vetcam/views/gestion_matieres/create.dart';
 
@@ -15,7 +16,6 @@ class Matieres extends StatefulWidget {
 }
 
 class _MatieresState extends State<Matieres> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,13 +33,24 @@ class _MatieresState extends State<Matieres> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   GFButton(
+                    text: "Importer fichier excel",
+                    color: GFColors.SECONDARY,
+                    onPressed: () async {
+                      await loadPDRData();
+                    },
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  GFButton(
                     text: "Ajouter nouveau matiere",
                     onPressed: () {
                       showDialog(
                           context: context,
                           builder: (context) {
                             return Dialog(
-                              insetPadding: EdgeInsets.symmetric(horizontal: 400),
+                              insetPadding:
+                                  EdgeInsets.symmetric(horizontal: 400),
                               child: SingleChildScrollView(
                                 child: CreateMatiere(),
                               ),
@@ -58,6 +69,7 @@ class _MatieresState extends State<Matieres> {
                   final matieres =
                       box.values.toList().cast<MatiereModel>().toList();
                   return DataTable(
+                    columnSpacing: 30,
                     headingRowColor: MaterialStateColor.resolveWith(
                         (states) => Colors.blueGrey[100] as Color),
                     headingTextStyle: const TextStyle(
@@ -68,9 +80,8 @@ class _MatieresState extends State<Matieres> {
                       DataColumn(label: Text('Code produit')),
                       DataColumn(label: Text('Désignation')),
                       DataColumn(label: Text('Unité')),
-                      DataColumn(label: Text('Qantité')),
                       DataColumn(label: Text('Prix Unité')),
-                      DataColumn(label: Text('Prix Total')),
+                      // DataColumn(label: Text('Prix Total')),
                       DataColumn(label: Text('Observation')),
                     ],
                     rows: matieres
@@ -99,10 +110,10 @@ class _MatieresState extends State<Matieres> {
                                 DataCell(Text(matiere.code)),
                                 DataCell(Text(matiere.designation)),
                                 DataCell(Text(matiere.unite)),
-                                DataCell(Text(matiere.quantite.toString())),
+                                // DataCell(Text(matiere.quantite.toString())),
                                 DataCell(Text(matiere.prixU.toString())),
-                                DataCell(Text((matiere.prixU * matiere.quantite)
-                                    .toString())),
+                                // DataCell(Text((matiere.prixU * matiere.quantite)
+                                //     .toString())),
                                 DataCell(Text(matiere.observation)),
                               ],
                             );

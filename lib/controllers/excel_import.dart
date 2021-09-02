@@ -1,15 +1,20 @@
 import 'dart:io';
-import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart';
 import 'package:excel/excel.dart';
 import 'package:vetcam/boxes.dart';
 import 'package:vetcam/const.dart';
+import 'package:vetcam/controllers/matieres_controller.dart';
 import 'package:vetcam/controllers/moules_controller.dart';
+import 'package:vetcam/models/matiere_model.dart';
 import 'package:vetcam/models/moule_model.dart';
 
 Future<void> loadMoulesData() async {
-  var context = p.Context(style: p.Style.windows);
-  var path = context.join(p.current, 'assets\\files');
-  var file = "${path}\\moules.xlsx";
+  var file = "";
+  if (kDebugMode) {
+    file = "./assets/files/moules.xlsx";
+  } else {
+    file = "./assets/files/moules.xlsx";
+  }
   var bytes = File(file).readAsBytesSync();
   var excel = Excel.decodeBytes(bytes);
 
@@ -39,7 +44,48 @@ Future<void> loadMoulesData() async {
             ..rebut = "";
           await addMoule(moule);
         } else {
+          await updateLastMouleId(getLastMouleId());
           await moule.save();
+        }
+      }
+    }
+  }
+}
+
+Future<void> loadPDRData() async {
+  var file = "";
+  if (kDebugMode) {
+    file = "./assets/files/PDR Matériels.xlsx";
+  } else {
+    file = "./assets/files/PDR Matériels.xlsx";
+  }
+  var bytes = File(file).readAsBytesSync();
+  var excel = Excel.decodeBytes(bytes);
+
+  for (var table in excel.tables.keys) {
+    if (sections.contains(table)) {
+      for (var row in excel.tables[table]!.rows) {
+        if (row[0]?.rowIndex == 0) continue;
+        final matieres =
+            Boxes.getMatieres().values.toList().cast<MatiereModel>().toList();
+        var matiere = matieres.firstWhere(
+            (matiere) => matiere.code == row[2]?.value.toString(),
+            orElse: () => MatiereModel()..id = "");
+        matiere
+          ..code = row[2]?.value.toString() ?? ""
+          ..designation = row[3]?.value.toString() ?? ""
+          ..unite = row[4]?.value.toString() ?? ""
+          ..prixU = double.tryParse(row[6]?.value.toStringAsFixed(1) as String) ?? 0;
+        if (matiere.id == "") {
+          var id = getLastMatiereId();
+          matiere
+            ..id = id.toString()
+            ..observation = ""
+            ..quantite = 0;
+          await updateLastMatiereId(id);
+          await addMatiere(matiere);
+        } else {
+          matiere.save();
         }
       }
     }
