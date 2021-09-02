@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:excel/excel.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:vetcam/boxes.dart';
 import 'package:vetcam/const.dart';
 import 'package:vetcam/controllers/matieres_controller.dart';
@@ -9,12 +9,8 @@ import 'package:vetcam/models/matiere_model.dart';
 import 'package:vetcam/models/moule_model.dart';
 
 Future<void> loadMoulesData() async {
-  var file = "";
-  if (kDebugMode) {
-    file = "./assets/files/moules.xlsx";
-  } else {
-    file = "./assets/files/moules.xlsx";
-  }
+  Directory appDocDir = await getApplicationDocumentsDirectory();
+  var file = appDocDir.path + '/vetcam data/files/moules.xlsx';
   var bytes = File(file).readAsBytesSync();
   var excel = Excel.decodeBytes(bytes);
 
@@ -53,12 +49,8 @@ Future<void> loadMoulesData() async {
 }
 
 Future<void> loadPDRData() async {
-  var file = "";
-  if (kDebugMode) {
-    file = "./assets/files/PDR Matériels.xlsx";
-  } else {
-    file = "./assets/files/PDR Matériels.xlsx";
-  }
+  Directory appDocDir = await getApplicationDocumentsDirectory();
+  var file = appDocDir.path + '/vetcam data/files/pdr.xlsx';
   var bytes = File(file).readAsBytesSync();
   var excel = Excel.decodeBytes(bytes);
 

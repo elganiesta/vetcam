@@ -15,7 +15,7 @@ import 'route_generator.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Directory appDocDir = await getApplicationDocumentsDirectory();
-  await Hive.initFlutter(appDocDir.path + '/vetcam data');
+  await Hive.initFlutter(appDocDir.path + '/vetcam data/database');
 
   Hive.registerAdapter(OrdreTravailModelAdapter());
   Hive.registerAdapter(IntervenantModelAdapter());
